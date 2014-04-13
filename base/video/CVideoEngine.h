@@ -14,7 +14,7 @@
 #include <SDL.h>
 #include <string>
 
-#include "sdl/CVidConfig.h"
+#include "CVidConfig.h"
 #include "sdl/extensions.h"
 #include <memory>
 

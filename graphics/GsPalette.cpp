@@ -6,7 +6,7 @@
  */
 
 #include "GsPalette.h"
-#include "../graphics/PerSurfaceAlpha.h"
+#include "graphics/PerSurfaceAlpha.h"
 #include <base/video/CVideoDriver.h>
 
 #include <cstring>

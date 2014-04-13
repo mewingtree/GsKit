@@ -5,9 +5,9 @@
  *      Author: gerhard
  */
 
-#include <lib/base/GsTimer.h>
+#include <base/GsTimer.h>
 #include "CVideoEngine.h"
-#include <lib/base/GsLogging.h>
+#include <base/GsLogging.h>
 #include <SDL_syswm.h>
 #include <base/video/scaler/scalebit.h>
 

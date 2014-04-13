@@ -1,7 +1,7 @@
 #include "GsScrollbar.h"
 
 #include <base/video/CVideoDriver.h>
-#include <lib/base/PointDevice.h>
+#include <base/PointDevice.h>
 #include <graphics/GsGraphics.h>
 
 

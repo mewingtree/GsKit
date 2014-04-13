@@ -9,9 +9,9 @@
 #include <iostream>
 #include <string.h>
 #include <fstream>
-#include <lib/base/GsLogging.h>
-#include <lib/base/FindFile.h>
-#include <lib/base/Debug.h>
+#include <base/GsLogging.h>
+#include <base/FindFile.h>
+#include <base/Debug.h>
 
 
 CLogFile::CLogFile() {}

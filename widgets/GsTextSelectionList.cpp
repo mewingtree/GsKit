@@ -8,7 +8,7 @@
 #include <base/video/CVideoDriver.h>
 #include <graphics/GsGraphics.h>
 #include <base/CInput.h>
-#include <lib/base/PointDevice.h>
+#include <base/PointDevice.h>
 
 
 #include "GsTextSelectionList.h"

@@ -12,7 +12,7 @@
 #include <base/FindFile.h>
 #include "GsTilemap.h"
 #include "GsPalette.h"
-#include <lib/base/GsLogging.h>
+#include <base/GsLogging.h>
 #include <stdlib.h>
 
 GsTilemap::GsTilemap() :

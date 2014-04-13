@@ -12,7 +12,7 @@
 #include <base/video/CVideoDriver.h>
 #include <base/CInput.h> // for CInput::renderOverlay
 #include "graphics/GsGraphics.h"
-#include <lib/base/GsLogging.h>
+#include <base/GsLogging.h>
 #include "graphics/PerSurfaceAlpha.h"
 
 

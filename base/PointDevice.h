@@ -2,7 +2,7 @@
 #define POINTDEVICE_H_
 
 //#include <base/Event.h>
-//#include <lib/base/Vector2D.h>
+//#include <base/Vector2D.h>
 #include "Vector2D.h"
 #include <base/Singleton.h>
 #include <SDL.h>

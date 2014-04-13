@@ -9,14 +9,14 @@
  */
 #include "CVideoDriver.h"
 //#include "input/CInput.h"
-//#include <lib/base/GsTimer.h>
+//#include <base/GsTimer.h>
 
 #include <base/video/CSDLVideo.h>
 #include <base/video/COpenGL.h>
 #include "resolutionlist.h"
 
 #include "graphics/GsGraphics.h"
-#include <lib/base/GsLogging.h>
+#include <base/GsLogging.h>
 #include <base/FindFile.h>
 #include "graphics/PerSurfaceAlpha.h"
 #include <iostream>

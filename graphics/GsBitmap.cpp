@@ -10,7 +10,7 @@
 #include <base/FindFile.h>
 #include <base/video/CVideoDriver.h>
 
-#include <lib/base/GsLogging.h>
+#include <base/GsLogging.h>
 
 GsBitmap::GsBitmap()
 {}
