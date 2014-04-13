@@ -4,6 +4,46 @@
 #include "GsSurface.h"
 
 
+Uint32 GsWeakSurface::getPixel(const int x, const int y)
+{
+    SDL_LockSurface(mpSurface);
+
+    int bpp = mpSurface->format->BytesPerPixel;
+    /* Here p is the address to the pixel we want to retrieve */
+    Uint8 *p = (Uint8 *)mpSurface->pixels + y * mpSurface->pitch + x * bpp;
+    Uint32 pixColor = 0;
+
+    switch(bpp)
+    {
+    case 1:
+        pixColor = *p;
+        break;
+
+    case 2:
+        memcpy(&pixColor, p, sizeof(Uint16));
+        break;
+
+    case 3:
+        if(SDL_BYTEORDER == SDL_BIG_ENDIAN)
+            return p[0] << 16 | p[1] << 8 | p[2];
+        else
+            return p[0] | p[1] << 8 | p[2] << 16;
+        break;
+
+    case 4:
+        memcpy(&pixColor, p, sizeof(Uint32));
+        break;
+
+    default:
+        return 0;       /* shouldn't happen, but avoids warnings */
+    }
+
+    SDL_UnlockSurface(mpSurface);
+
+    return pixColor;
+}
+
+
 GsRect<Uint16> GsWeakSurface::calcBlitRect(const GsRect<float> &rect)
 {
     GsRect<Uint16> absRect(0, 0, mpSurface->w, mpSurface->h);

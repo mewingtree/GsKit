@@ -98,30 +98,15 @@ bool CSDLVideo::resizeDisplayScreen(const GsRect<Uint16>& newDim)
 }
 
 
-bool CSDLVideo::initOverlaySurface( const bool useAlpha,
-                                       const Uint16 width,
-                                       const Uint16 height )
+bool CSDLVideo::initOverlaySurface(const Uint16 width,
+                                   const Uint16 height )
 {
 
-    SDL_Surface *overlay = createSurface( "OverlaySurface",
-                                         useAlpha,
-                                         width,
-                                         height,
-                                         RES_BPP,
-                                         m_Mode );
+    mOverlaySurface.create(m_Mode, width, height, RES_BPP,
+                           0,0,0,0);
 
-    mpOverlaySurface.reset( overlay );
-
-    if(!mpOverlaySurface)
-        return false;
-
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-    SDL_SetSurfaceBlendMode( overlay, SDL_BLENDMODE_BLEND);
-    SDL_SetSurfaceAlphaMod( overlay, 0);
-#else
-    SDL_SetAlpha( overlay, SDL_SRCALPHA, 0);
-#endif
-
+    mOverlaySurface.setBlendMode(SDL_BLENDMODE_BLEND);
+    mOverlaySurface.setAlpha(0);
 
     return true;
 }
@@ -131,30 +116,23 @@ void CSDLVideo::setLightIntensity(const float intensity)
 {
     Uint8 intense = Uint8(intensity*255.0f);
 
-    auto *sfc = mpOverlaySurface.get();
-    Uint32 color = SDL_MapRGB(sfc->format, 0, 0, 0);
-
-    #if SDL_VERSION_ATLEAST(2, 0, 0)
-        SDL_SetSurfaceAlphaMod( sfc, 255-intense);
-    #else
-        SDL_SetAlpha( sfc, SDL_SRCALPHA, 255-intense);
-    #endif
-
-    SDL_FillRect( sfc, nullptr, color);
+    mOverlaySurface.setAlpha(255-intense);
+    mOverlaySurface.fillRGB(0, 0, 0);
 }
 
 
 void CSDLVideo::collectSurfaces()
 {
-    SDL_Surface *overlay = mpOverlaySurface.get();
-
-    if( getPerSurfaceAlpha(overlay) )
-        SDL_BlitSurface(overlay, NULL, mpGameSfc.get(), NULL);
+    if( mOverlaySurface.getAlpha() > 0 )
+    {
+        GsWeakSurface gameSfc(mpGameSfc.get());
+        mOverlaySurface.blitTo(gameSfc);
+    }
 }
 
 void CSDLVideo::clearSurfaces()
 {
-    SDL_FillRect(mpOverlaySurface.get(), NULL, 0x0);
+    mOverlaySurface.fillRGB(0, 0, 0);
     SDL_FillRect(mpGameSfc.get(), NULL, 0x0);
 }
 

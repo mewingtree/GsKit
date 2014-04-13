@@ -342,13 +342,12 @@ Uint32 GsFont::getBGColour(SDL_PixelFormat *format, const bool highlight)
 
 void  GsFont::getBGColour(Uint8 *r, Uint8 *g, Uint8 *b, const bool highlight)
 {
-	SDL_LockSurface(mFontSurface.get());
 
-	const Uint32 color = getPixel(mFontSurface.get(), 0, highlight ? 80 : 16 );
+    GsWeakSurface fontSfc(mFontSurface.get());
 
-	SDL_UnlockSurface(mFontSurface.get());
+    const Uint32 color = fontSfc.getPixel(0, highlight ? 80 : 16 );
 
-	SDL_GetRGB( color, mFontSurface->format, r, g, b);
+    fontSfc.getRGB(color, *r, *g, *b);
 }
 
 

@@ -11,6 +11,7 @@
 #define CSDLVIDEO_H_
 
 #include <base/video/CVideoEngine.h>
+#include <graphics/GsSurface.h>
 
 class CSDLVideo : public CVideoEngine
 {
@@ -30,18 +31,16 @@ public:
 									SDL_Surface *dstSfc,
 									const SDL_Rect *dstrect );
 
-    /*SDL_Surface *getOverlaySurface()
-    { return mpOverlaySurface.get(); }*/
 
-    bool initOverlaySurface( const bool useAlpha,
-                             const Uint16 width,
+    bool initOverlaySurface( const Uint16 width,
                              const Uint16 height );
 
     void transformScreenToDisplay();
 
 private:
 
-    std::unique_ptr<SDL_Surface, SDL_Surface_Deleter> mpOverlaySurface; // For some situations like darkrooms we need to use that surface!
+    GsSurface mOverlaySurface;
+    //std::unique_ptr<SDL_Surface, SDL_Surface_Deleter> mpOverlaySurface; // For some situations like darkrooms we need to use that surface!
 
 };
 

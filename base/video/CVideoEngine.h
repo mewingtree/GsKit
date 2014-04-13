@@ -15,8 +15,16 @@
 #include <string>
 
 #include "CVidConfig.h"
-#include "sdl/extensions.h"
 #include <memory>
+
+
+struct SDL_Surface_Deleter
+{
+    void operator()(SDL_Surface* sfc)
+    {
+        SDL_FreeSurface(sfc);
+    }
+};
 
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)

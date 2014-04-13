@@ -58,6 +58,14 @@ public:
                   const Uint32 contourColor);
 
 
+    /**
+     * @brief getPixel given the coordinate it will return the pixel color as Uint32.
+     * @param x
+     * @param y
+     * @return Pixel which still needs conversion through SDL_MapRGB;
+     */
+    Uint32 getPixel(const int x, const int y);
+
     GsRect<Uint16> calcBlitRect(const GsRect<float> &rect);
 
     int blitTo(GsWeakSurface &sfc)
@@ -84,6 +92,16 @@ public:
     Uint32 mapRGBA(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)
     {
         return SDL_MapRGBA( mpSurface->format, r, g, b, a );
+    }
+
+    void getRGB(const Uint32 color, Uint8 &r, Uint8 &g, Uint8 &b)
+    {
+        SDL_GetRGB( color, mpSurface->format, &r, &g, &b );
+    }
+
+    void getRGBA(const Uint32 color, Uint8 &r, Uint8 &g, Uint8 &b, Uint8 &a)
+    {
+        SDL_GetRGBA( color, mpSurface->format, &r, &g, &b, &a );
     }
 
 
@@ -128,6 +146,26 @@ public:
 #else
     SDL_SetColorKey( mpSurface, SDL_SRCCOLORKEY, mapRGB(r, g, b) );
 #endif
+    }
+
+    void setBlendMode(const SDL_BlendMode mode)
+    {
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+    SDL_SetSurfaceBlendMode( mpSurface, mode );
+#endif
+
+    }
+
+
+    Uint8 getAlpha()
+    {
+    #if SDL_VERSION_ATLEAST(2, 0, 0)
+        Uint8 alpha = 0;
+        SDL_GetSurfaceAlphaMod(mpSurface, &alpha);
+        return alpha;
+    #else
+        return mpSurface->format->alpha;
+    #endif
     }
 
     void setAlpha(const unsigned char alpha)
