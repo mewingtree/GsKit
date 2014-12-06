@@ -13,10 +13,9 @@
 #define CVIDEODRIVER_H_
 
 #include <base/Singleton.h>
-//#include "CVidConfig.h"
 #include <base/video/CVideoEngine.h>
 #include <base/GsEvent.h>
-#include "common/CMap.h"
+#include <queue>
 
 #ifdef USE_OPENGL
     #include <base/video/COpenGL.h>
@@ -29,6 +28,7 @@
 #include <iostream>
 #include <list>
 #include <memory>
+#include <tuple>
 
 class CVideoDriver : public GsSingleton<CVideoDriver>
 {
@@ -60,9 +60,7 @@ public:
 	void isFullscreen(bool value);
 
 	void blitScrollSurface();
-	void updateScrollBuffer(CMap &map);
-	void updateScrollBuffer(std::shared_ptr<CMap> &map)
-	{ updateScrollBuffer(*map.get()); }	
+    void updateScrollBuffer(const Sint16 SBufferX, const Sint16 SBufferY);
 	
 	void collectSurfaces();
 	void clearSurfaces();
@@ -74,7 +72,7 @@ public:
     }
 
 	// Drawing related stuff
-	SDL_Rect toBlitRect(const GsRect<float> &rect);
+    SDL_Rect toBlitRect(const GsRect<float> &rect);
 
 	/**
 	 * \description This function saves the given camera bounds. It is usually called
@@ -103,11 +101,7 @@ public:
     SDL_Surface *convertThroughBlitSfc( SDL_Surface *sfc );
 
 	bool isOpenGL(void) { return m_VidConfig.m_opengl; }
-#ifdef USE_OPENGL
-	unsigned char getOGLFilter(void) { return m_VidConfig.m_opengl_filter; }
-#else
-	unsigned char getOGLFilter(void) { return 0; }
-#endif
+
 	SDL_Surface *getScrollSurface(void);
 
 	void setVidConfig(const CVidConfig& VidConf);
@@ -118,12 +112,12 @@ public:
 	void setScaleType(bool IsNormal);
 	void setZoom(short vale);
 #ifdef USE_OPENGL
-	void enableOpenGL(bool value) { m_VidConfig.m_opengl = value; }
-	void setOGLFilter(GLint value) { m_VidConfig.m_opengl_filter = value; }
+	void enableOpenGL(bool value) { m_VidConfig.m_opengl = value; }	
 #else
 	void enableOpenGL(bool value) { m_VidConfig.m_opengl = false; }
-	void setOGLFilter(unsigned char value) { }
 #endif
+
+    void setRenderQuality(const std::string &value) { m_VidConfig.mRenderScQuality = value; }
 
 	/*
 	 * \brief Check whether this resolution is okay to be used or needs some adjustments if possible.
@@ -145,9 +139,45 @@ public:
 	  m_VidConfig.mAspectCorrection.w = w; 
 	  m_VidConfig.mAspectCorrection.h = h; 
 	}
+
 	bool getSpecialFXConfig(void) { return m_VidConfig.m_special_fx; }
 	bool getRefreshSignal() { return m_mustrefresh; }
 	void setRefreshSignal(const bool value) { m_mustrefresh = value;  }
+
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+    SDL_Renderer& getRendererRef()
+    {
+        return *(mpVideoEngine->renderer);
+    }
+
+    /**
+     * @brief addTextureToRender add texture ptr to the that will be renderered
+     * @param texturePtr    pointer to the SDL Texture
+     */
+    void addTextureRefToRender(SDL_Texture& textureRef)
+    {
+        std::tuple< SDL_Texture*, const GsRect<Uint16>, const GsRect<Uint16> >
+                triple( &textureRef, {0, 0, 0, 0}, {0, 0, 0, 0 } );
+
+        mpVideoEngine->mRenderTexturePtrs.push(triple);
+    }
+
+
+    /**
+     * @brief addTextureRefToRender add texture ptr to the that will be renderered
+     * @param textureRef    pointer to the SDL Texture
+     * @param dstRect       Rect where to put this texture on
+     */
+    void addTextureRefToRender(SDL_Texture& textureRef, const GsRect<Uint16> &dstRect)
+    {
+        std::tuple< SDL_Texture*, const GsRect<Uint16>, const GsRect<Uint16> >
+                triple( &textureRef, {0, 0, 0, 0}, dstRect );
+
+        mpVideoEngine->mRenderTexturePtrs.push(triple);
+    }
+
+
+#endif
 
 	st_camera_bounds &getCameraBounds();
 
@@ -156,10 +186,13 @@ public:
 	std::list< GsRect<Uint16> > m_Resolutionlist;
 	std::list< GsRect<Uint16> > :: iterator m_Resolution_pos;
 
+    SDL_sem *mpPollSem;
+
 private:
 
 	CVidConfig m_VidConfig;
 	bool m_mustrefresh;
-	bool mSDLImageInUse;
+	bool mSDLImageInUse;    
+
 };
 #endif /* CVIDEODRIVER_H_ */

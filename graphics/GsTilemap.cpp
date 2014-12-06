@@ -5,15 +5,15 @@
  *      Author: gerstrong
  */
 
-#include "fileio/CTileLoader.h"
-#include "fileio/ResourceMgmt.h"
+#include <fileio/ResourceMgmt.h>
 #include <base/video/CVideoDriver.h>
 #include <SDL_image.h>
-#include <base/FindFile.h>
+#include <base/utils/FindFile.h>
 #include "GsTilemap.h"
 #include "GsPalette.h"
 #include <base/GsLogging.h>
 #include <stdlib.h>
+#include <SDL_image.h>
 
 GsTilemap::GsTilemap() :
 m_Tilesurface(NULL),
@@ -60,9 +60,9 @@ bool GsTilemap::loadHiresTile( const std::string& filename, const std::string& p
 	if(!IsFileAvailable(fullfilename))
 		return false;
 
-	if(m_Tilesurface)
+    if(m_Tilesurface)
 	{	  	  
-		SDL_Surface *temp_surface = IMG_Load(GetFullFileName(fullfilename).c_str());
+        SDL_Surface *temp_surface = IMG_Load(GetFullFileName(fullfilename).c_str());
 		if(temp_surface)
 		{
 			SDL_FreeSurface(m_Tilesurface);
@@ -75,7 +75,7 @@ bool GsTilemap::loadHiresTile( const std::string& filename, const std::string& p
 		  gLogging.textOut(RED, "IMG_Load: CG will ignore those images\n");
 		}
 	}
-	
+
 	return false;
 }
 
@@ -203,13 +203,79 @@ void GsTilemap::drawTile(SDL_Surface *dst, int x, int y, Uint16 t)
         src_rect.w = dst->w - dst_rect.x;
     }
 
-    SDL_BlitSurface(m_Tilesurface, &src_rect, dst, &dst_rect);
+    BlitSurface(m_Tilesurface, &src_rect, dst, &dst_rect);
 
 #ifdef DEBUG_COLLISION
 	//std::vector<CTileProperties> &TileProp = g_pBehaviorEngine->getTileProperties(1);
 	//FillSlopeRect(dst, dst_rect, 0xFFFFFFFF, TileProp[t].bup);
 #endif
 
+}
+
+void GsTilemap::applyGalaxyHiColourMask()
+{
+
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+    SDL_Surface *newSfc =
+            SDL_ConvertSurfaceFormat(m_Tilesurface, SDL_PIXELFORMAT_RGBA8888, 0);
+#else
+    SDL_Surface *blit = gVideoDriver.getBlitSurface();
+    SDL_Surface *newSfc = SDL_ConvertSurface(m_Tilesurface, blit->format, 0 );
+#endif
+
+
+    SDL_FreeSurface(m_Tilesurface);
+
+    m_Tilesurface = newSfc;
+
+    const SDL_PixelFormat *format = m_Tilesurface->format;
+
+    // TODO: We might define that as a GsSurface
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+        SDL_SetSurfaceBlendMode(m_Tilesurface, SDL_BLENDMODE_BLEND);
+#endif
+
+    SDL_LockSurface(m_Tilesurface);
+
+    // Pointer of start pixel
+    Uint8 *pxStart = static_cast<Uint8*>(m_Tilesurface->pixels);
+
+    // From 0 to half width for every row ...
+    int midRow = m_Tilesurface->w/2;
+
+
+    for( int y=0 ; y<m_Tilesurface->h ; y++ )
+    {
+        Uint8 *pxRow = pxStart + y*m_Tilesurface->pitch;
+        for( int x=0 ; x<midRow ; x++ )
+        {
+            Uint8 *px = pxRow + x*format->BytesPerPixel;
+            Uint8 *pxMask = px + midRow*format->BytesPerPixel;
+
+            Uint32 pix = 0;
+            Uint32 mask = 0;
+            memcpy(&pix, px, format->BytesPerPixel);
+            memcpy(&mask, pxMask, format->BytesPerPixel);
+
+            // Get the mask part
+            Uint8 mask_r, mask_g, mask_b;
+            SDL_GetRGB(mask, format, &mask_r, &mask_g, &mask_b);
+
+            // Get the color
+            Uint8 r, g, b;
+            SDL_GetRGB(pix, format, &r, &g, &b);
+
+            // Calculate the new alpha, which will do the transparency and even allow translucency
+            const Uint8 alpha = 255-(( (mask_r<<16) + (mask_g<<8) + mask_b ) >> 16);
+
+            pix = SDL_MapRGBA( format, r, g, b, alpha );
+
+            memcpy(px, &pix, format->BytesPerPixel);
+
+        }
+    }
+
+    SDL_UnlockSurface(m_Tilesurface);
 }
 
 GsTilemap::~GsTilemap() 

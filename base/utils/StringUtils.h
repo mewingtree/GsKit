@@ -11,7 +11,8 @@
 #ifndef __STRINGUTILS_H__
 #define __STRINGUTILS_H__
 
-#include <SDL.h> // for Uint32
+//#include <SDL.h> // for Uint32
+
 #include <cstdio> // for FILE
 #include <string>
 #include <sstream>
@@ -71,15 +72,15 @@ inline int strncasecmp(const char *str1, const char *str2, size_t l) {
 #	define snprintf	 _snprintf
 #	define stricmp _stricmp
 #	define fcloseall _fcloseall
-#	define strcasecmp	stricmp
-#else
-inline void strlwr(char* string) {
+//#	define strcasecmp	stricmp
+/*#else*/
+/*inline void strlwr(char* string) {
 	if(string)
 		while( *string ) {
 			*string = (char)tolower( *string );
 			string++;
 		}
-}
+}*/
 #endif
 
 
@@ -269,8 +270,8 @@ inline bool from_string<bool>(const std::string& s, bool& fail) {
 	return from_string<int>(s, fail) != 0;
 }
 
-template<> VectorD2<int> from_string< VectorD2<int> >(const std::string& s, bool& fail);
-template<> inline std::string to_string< VectorD2<int> >(VectorD2<int> v) { return "(" + to_string(v.x) + "," + to_string(v.y) + ")"; }
+/*template<> VectorD2<int> from_string< VectorD2<int> >(const std::string& s, bool& fail);
+template<> inline std::string to_string< VectorD2<int> >(VectorD2<int> v) { return "(" + to_string(v.x) + "," + to_string(v.y) + ")"; }*/
 
 template<typename T>
 T from_string(const std::string& s) {

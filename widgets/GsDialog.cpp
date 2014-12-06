@@ -15,7 +15,7 @@
 #include <graphics/GsGraphics.h>
 #include <base/GsLogging.h>
 
-#include "common/CBehaviorEngine.h"
+//#include "engine/core/CBehaviorEngine.h"
 
 
 const unsigned int MAX_ELEMENTS_PER_PAGE = 7;
@@ -37,25 +37,14 @@ mFXvStep(0)
 }
 
 
-void CGUIDialog::updateBackground()
+void CGUIDialog::setBackground(GsSurface &bgSfc)
 {
-	if( g_pBehaviorEngine->getEngine() == ENGINE_VORTICON )
-	{
-        initVorticonBackground();
-	}
-	else if( g_pBehaviorEngine->getEngine() == ENGINE_GALAXY )
-	{
-        initGalaxyBackround();
-	}
-	else
-	{
-		initEmptyBackround();
-	}
+    mBackgroundSfc = bgSfc;
 }
 
 void CGUIDialog::updateGraphics()
 {
-    updateBackground();
+    //updateBackground();
     for( auto &control : mControlList )
     {
         control->updateGraphics();
@@ -128,7 +117,7 @@ void CGUIDialog::selectPrevItem()
 	// Ensures that disabled items are skipped
 	for( ; it != mControlList.begin() ; it-- )
 	{
-		if( (*it)->mEnabled )
+        if( (*it)->isEnabled() )
 			break;
 
 		mSelection--;
@@ -165,7 +154,7 @@ void CGUIDialog::selectNextItem()
 	// Ensures that disabled items are skipped
 	for( ; it != mControlList.end() ; it++ )
 	{
-		if( (*it)->mEnabled )
+        if( (*it)->isEnabled() )
 			break;
 
 		mSelection++;
@@ -276,32 +265,12 @@ void CGUIDialog::setPosition(const float x, const float y)
 
 
 
-void CGUIDialog::initEmptyBackround()
+void CGUIDialog::initEmptyBackground()
 {
     const SDL_Rect lRect = gVideoDriver.toBlitRect(mRect);
 
-    /*auto *blit = gVideoDriver.getBlitSurface();
-    SDL_PixelFormat *format = blit->format;
-
-    SDL_Surface *sfc = SDL_CreateRGBSurface( SDL_SWSURFACE,
-                rect.w,
-                rect.h,
-                RES_BPP,
-                format->Rmask,
-                format->Gmask,
-                format->Bmask,
-                format->Amask );-*/
-
     mBackgroundSfc.create(0, lRect.w, lRect.h, RES_BPP, 0, 0, 0, 0);
-
-    /*mpBackgroundSfc.reset( CG_CreateRGBSurface( lRect ), &SDL_FreeSurface );
-
-    mpBackgroundSfc.reset( gVideoDriver.convertThroughBlitSfc( mpBackgroundSfc.get() ), &SDL_FreeSurface );*/
-
-
     mBackgroundSfc.fillRGB(230, 230, 230);
-    /*SDL_Surface *sfc = mpBackgroundSfc.get();
-    SDL_FillRect( sfc, NULL, SDL_MapRGB( sfc->format, 230, 230, 230) );        */
 }
 
 
@@ -336,74 +305,10 @@ void CGUIDialog::drawBorderRect(SDL_Surface *backSfc, const SDL_Rect &Rect)
     Font.drawCharacter( backSfc, 8, Rect.w-8, Rect.h-8 );
 }
 
-
-void CGUIDialog::initVorticonBackground()
-{
-    const SDL_Rect Rect = gVideoDriver.toBlitRect(mRect);
-    /*mpBackgroundSfc.reset( CG_CreateRGBSurface( Rect ), &SDL_FreeSurface );
-    mpBackgroundSfc.reset( gVideoDriver.convertThroughBlitSfc( mpBackgroundSfc.get() ), &SDL_FreeSurface );*/
-    mBackgroundSfc.create(0, Rect.w, Rect.h, RES_BPP, 0, 0, 0, 0);
-
-	// Now lets draw the text of the list control
-	GsFont &Font = gGraphics.getFont(1);
-
-    SDL_Surface *backSfc = mBackgroundSfc.getSDLSurface();
-
-
-	// Draw the character so the classical vorticon menu is drawn
-
-	// Start with the blank space (normally it's white. Might be different in some mods)
-	for( int x=8 ; x<Rect.w-8 ; x+=8 )
-	{
-		for( int y=8 ; y<Rect.h-8 ; y+=8 )
-		{
-			Font.drawCharacter( backSfc, 32, x, y );
-		}
-	}
-
-	// Now draw the borders
-    drawBorderRect(backSfc, Rect);
-
-    mpTempSfc.reset( gVideoDriver.convertThroughBlitSfc( backSfc ), &SDL_FreeSurface );
-}
-
-void CGUIDialog::initGalaxyBackround()
-{
-    GsBitmap backgroundBmp( *gGraphics.getBitmapFromStr("KEENSWATCH") );
-
-    GsRect<Uint16> gameRes = gVideoDriver.getGameResolution();
-    backgroundBmp.scaleTo(gameRes);
-
-    GsRect<Uint16> bmpRect(backgroundBmp.getWidth(), backgroundBmp.getHeight());
-
-    GsWeakSurface swatchSfc(backgroundBmp.getSDLSurface());
-
-    mBackgroundSfc.create( 0, bmpRect.w, bmpRect.h, RES_BPP, 0, 0, 0, 0);
-    swatchSfc.blitTo(mBackgroundSfc);
-
-
-    // Besides the Background Bitmap we need to draw two lines
-    SDL_Surface *backSfc = mBackgroundSfc.getSDLSurface();
-
-    Uint32 color = SDL_MapRGB( backSfc->format, 84, 234, 84 );
-	SDL_Rect scoreRect;
-    scoreRect.w = 15*gameRes.w/32;
-    scoreRect.h = gameRes.h/200;
-    scoreRect.x = gameRes.w/4;
-
-    if(gameRes.h > 200) // This will display the line score correctly.
-        scoreRect.y = 55*gameRes.h/202;
-    else
-        scoreRect.y = 55;
-
-	SDL_FillRect(backSfc, &scoreRect, color);
-}
-
-
 void CGUIDialog::processLogic()
 {
     // For the special effect not used in the galaxy engine
-    if( g_pBehaviorEngine->getEngine() != ENGINE_GALAXY )
+    if( mFXSetup == EXPAND )
     {
         if( mFXhStep > 0 )
         {
@@ -470,62 +375,66 @@ void CGUIDialog::processRendering(SDL_Surface *blit)
     GsRect<Uint16> GameRes = gVideoDriver.getGameResolution();
     GsRect<float> screenRect(0, 0, GameRes.w, GameRes.h);
 
-    auto engine = g_pBehaviorEngine->getEngine();
-    auto *bgSfc = mBackgroundSfc.getSDLSurface();
+    SDL_Surface *bgSfc = mBackgroundSfc.getSDLSurface();
 
-    if( engine == ENGINE_GALAXY )
-	{
-        SDL_BlitSurface( bgSfc, nullptr, blit, nullptr );
-	}
-	else
+    if(bgSfc)
     {
-        SDL_Rect lRect;
 
-        if( mFXhStep == 0 && mFXvStep == 0 )
+        if( mFXSetup == NONE )
         {
-            lRect = gVideoDriver.toBlitRect(mRect);
-            SDL_BlitSurface( bgSfc, nullptr, blit, &lRect );
+            BlitSurface( bgSfc, nullptr, blit, nullptr );
         }
         else
         {
-            GsRect<float> fxRect = mRect;
+            SDL_Rect lRect;
 
-            if( mFXhStep > 0 )
+            if( mFXhStep == 0 && mFXvStep == 0 )
             {
-                fxRect.w = (MAX_STEPS-mFXhStep)*(mRect.w/float(MAX_STEPS));
-                fxRect.x = fxRect.x + (mRect.w-fxRect.w)/2;
-            }
-
-            if( mFXvStep > 0 )
-            {
-                fxRect.h = (MAX_STEPS-mFXvStep)*(mRect.h/float(MAX_STEPS));;
-                fxRect.y = fxRect.y + (mRect.h-fxRect.h)/2;
-            }
-
-            lRect = gVideoDriver.toBlitRect(fxRect);
-
-            // Makes the Border look more like in DOS-Keen
-            if( engine == ENGINE_VORTICON && lRect.h < 16 )
-                lRect.h = 16;
-
-            auto srGsRect = lRect;
-            srGsRect.y = srGsRect.x = 0;
-
-            if( engine == ENGINE_VORTICON )
-            {
-                auto *tmpSfc = mpTempSfc.get();
-                SDL_FillRect( tmpSfc, &srGsRect, 0xFFFFFFFF );
-                drawBorderRect( tmpSfc, srGsRect );
-                SDL_BlitSurface( tmpSfc, &srGsRect, blit, &lRect );
+                lRect = gVideoDriver.toBlitRect(mRect);
+                BlitSurface( bgSfc, nullptr, blit, &lRect );
             }
             else
             {
-                SDL_BlitSurface( bgSfc, &srGsRect, blit, &lRect );
+                GsRect<float> fxRect = mRect;
+
+                if( mFXhStep > 0 )
+                {
+                    fxRect.w = (MAX_STEPS-mFXhStep)*(mRect.w/float(MAX_STEPS));
+                    fxRect.x = fxRect.x + (mRect.w-fxRect.w)/2;
+                }
+
+                if( mFXvStep > 0 )
+                {
+                    fxRect.h = (MAX_STEPS-mFXvStep)*(mRect.h/float(MAX_STEPS));;
+                    fxRect.y = fxRect.y + (mRect.h-fxRect.h)/2;
+                }
+
+                lRect = gVideoDriver.toBlitRect(fxRect);
+
+                // Makes the Border look more like in DOS-Keen
+                if( mFXSetup == EXPAND && lRect.h < 16 )
+                    lRect.h = 16;
+
+                auto srGsRect = lRect;
+                srGsRect.y = srGsRect.x = 0;
+
+                if( mpTempSfc && mFXSetup == EXPAND )
+                {
+                    auto *tmpSfc = mpTempSfc.get();
+                    SDL_FillRect( tmpSfc, &srGsRect, 0xFFFFFFFF );
+                    drawBorderRect( tmpSfc, srGsRect );
+                    BlitSurface( tmpSfc, &srGsRect, blit, &lRect );
+                }
+                else
+                {
+                    BlitSurface( bgSfc, &srGsRect, blit, &lRect );
+                }
             }
+
+            if( mFXhStep > 0 || mFXvStep > 0 )
+                return;
         }
 
-        if( mFXhStep > 0 || mFXvStep > 0 )
-            return;
     }
 
 	for( auto &it : mControlList )

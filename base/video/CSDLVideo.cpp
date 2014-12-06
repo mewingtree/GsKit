@@ -10,7 +10,6 @@
 #include <base/GsLogging.h>
 
 #include "graphics/GsGraphics.h"
-#include "graphics/PerSurfaceAlpha.h"
 
 CSDLVideo::CSDLVideo(const CVidConfig& VidConfig) :
 CVideoEngine(VidConfig)
@@ -21,8 +20,13 @@ bool CSDLVideo::init()
     if(!CVideoEngine::init())
         return false;
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-    // NOTE: try not to free the last SDL_Surface of the screen, this is freed automatically by SDL
+#if SDL_VERSION_ATLEAST(2, 0, 0)    
+
+    if(m_VidConfig.mRenderScQuality == "linear")
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+    else
+        SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "0");
+
     const int aspW = m_VidConfig.mAspectCorrection.w;
     const int aspH = m_VidConfig.mAspectCorrection.h;
 
@@ -31,12 +35,20 @@ bool CSDLVideo::init()
         SDL_DestroyWindow(window);
     }
 
+    Uint32 flags = 0;
+
+    if(m_VidConfig.Fullscreen)
+        flags |= SDL_WINDOW_FULLSCREEN;
+    else
+        flags |= (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+
+
     window = SDL_CreateWindow("Commander Genius",
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
                               m_VidConfig.m_DisplayRect.w,
                               m_VidConfig.m_DisplayRect.h,
-                              SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+                              flags);
 
     if(renderer)
     {
@@ -51,29 +63,18 @@ bool CSDLVideo::init()
 
     updateAspectRect(m_VidConfig.m_DisplayRect, aspW, aspH);
 
-    //SDL_RenderSetLogicalSize(renderer, m_VidConfig.m_DisplayRect.w, m_VidConfig.m_DisplayRect.h);
     resizeDisplayScreen(m_VidConfig.m_DisplayRect);
 
 #else
 
-    mDisplaySfc = SDL_SetVideoMode( m_VidConfig.m_DisplayRect.w, m_VidConfig.m_DisplayRect.h, 32, m_Mode );
+    mDisplaySfc.setPtr(SDL_SetVideoMode( m_VidConfig.m_DisplayRect.w, m_VidConfig.m_DisplayRect.h, 32, m_Mode ));
 
-    if (!mDisplaySfc)
+    if (mDisplaySfc.empty())
 	{
 		gLogging.textOut(RED,"VidDrv_Start(): Couldn't create a SDL surface: %s<br>", SDL_GetError());
 		return false;
 	}
 
-    const GsRect<Uint16> &GameRect = m_VidConfig.m_GameRect;
-    m_src_slice = GameRect.w*mDisplaySfc->format->BytesPerPixel;
-
-    /*aspectCorrectResizing(newDim, w, h);
-
-    if(FilteredSurface)
-    {
-        Scaler.setDynamicFactor( float(FilteredSurface->w)/float(aspectCorrectionRect.w),
-                                 float(FilteredSurface->h)/float(aspectCorrectionRect.h));
-    }*/
 
 #endif
 
@@ -83,15 +84,15 @@ bool CSDLVideo::init()
 
 bool CSDLVideo::resizeDisplayScreen(const GsRect<Uint16>& newDim)
 {
-    //const int w = m_VidConfig.mAspectCorrection.w;
-    //const int h = m_VidConfig.mAspectCorrection.h;
-    const int w = 0;
-    const int h = 0;
+    const int w = m_VidConfig.mAspectCorrection.w;
+    const int h = m_VidConfig.mAspectCorrection.h;
 
     updateAspectRect(newDim, w, h);
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
     SDL_RenderSetLogicalSize(renderer, mAspectCorrectionRect.w, mAspectCorrectionRect.h);
+#else
+    mDisplaySfc.setPtr(SDL_SetVideoMode( mAspectCorrectionRect.w, mAspectCorrectionRect.h, 32, m_Mode ));
 #endif
 
     return true;
@@ -104,8 +105,9 @@ bool CSDLVideo::initOverlaySurface(const Uint16 width,
 
     mOverlaySurface.create(m_Mode, width, height, RES_BPP,
                            0,0,0,0);
-
+#if SDL_VERSION_ATLEAST(2, 0, 0)
     mOverlaySurface.setBlendMode(SDL_BLENDMODE_BLEND);
+#endif
     mOverlaySurface.setAlpha(0);
 
     return true;
@@ -125,73 +127,77 @@ void CSDLVideo::collectSurfaces()
 {
     if( mOverlaySurface.getAlpha() > 0 )
     {
-        GsWeakSurface gameSfc(mpGameSfc.get());
-        mOverlaySurface.blitTo(gameSfc);
+        mOverlaySurface.blitTo(mGameSfc);
     }
 }
 
 void CSDLVideo::clearSurfaces()
 {
-    mOverlaySurface.fillRGB(0, 0, 0);
-    SDL_FillRect(mpGameSfc.get(), NULL, 0x0);
+    mOverlaySurface.fillRGB(0,0,0);
+    mGameSfc.fillRGB(0,0,0);
 }
 
 
 
 void CSDLVideo::transformScreenToDisplay()
 {
-    /*
-	if( Scaler.filterFactor() <= 1 &&
-			BlitSurface->h == aspectCorrectionRect.h &&
-			BlitSurface->w == aspectCorrectionRect.w )
-	{
-		SDL_Rect scrrect, dstrect;
-		scrrect.y = 0;
-		scrrect.x = 0;
-		dstrect.y = aspectCorrectionRect.y;
-		dstrect.x = aspectCorrectionRect.x;
-		dstrect.h = scrrect.h = BlitSurface->h;
-		dstrect.w = scrrect.w = BlitSurface->w;
 
-        #if SDL_VERSION_ATLEAST(2, 0, 0)
-            SDL_LockSurface(BlitSurface);
-            SDL_UpdateTexture(sdlTexture, nullptr, BlitSurface->pixels, BlitSurface->w * sizeof (Uint32));
-            SDL_UnlockSurface(BlitSurface);
-        #else
-            SDL_BlitSurface(BlitSurface, &scrrect, screen, &dstrect);
-        #endif
-	}
-	else
-	{
-		// First apply the conventional filter if any (GameScreen -> FilteredScreen)
-        Scaler.scaleUp(FilteredSurface, BlitSurface, SCALEX, aspectCorrectionRect);
-
-        #if SDL_VERSION_ATLEAST(2, 0, 0)
-            SDL_LockSurface(FilteredSurface);
-            SDL_UpdateTexture(sdlTexture, nullptr, FilteredSurface->pixels, FilteredSurface->w * sizeof (Uint32));
-            SDL_UnlockSurface(FilteredSurface);
-        #else
-            // Now scale up to the new DisplayRect (FilteredScreen -> screen)
-            Scaler.scaleUp(screen, FilteredSurface, DYNAMIC, aspectCorrectionRect);
-        #endif
-    }*/
-
-
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-    auto screen = mpScreenSfc.get();
-    SDL_LockSurface(screen);
-    SDL_UpdateTexture(mpSdlTexture.get(), nullptr, screen->pixels, screen->w * sizeof (Uint32));
-    SDL_UnlockSurface(screen);
+#if SDL_VERSION_ATLEAST(2, 0, 0)            
+    mpScreenSfc->lock();
+    SDL_UpdateTexture(mpSDLScreenTexture.get(), nullptr, mpScreenSfc->getSDLSurface()->pixels, mpScreenSfc->width() * sizeof (Uint32));
+    mpScreenSfc->unlock();
 
     SDL_RenderClear(renderer);
-    SDL_RenderCopy(renderer, mpSdlTexture.get(), NULL, NULL);
+    SDL_RenderCopy(renderer, mpSDLScreenTexture.get(), NULL, NULL);
+
+    // Now render the textures which additionally sent over...
+    while(!mRenderTexturePtrs.empty())
+    {
+        auto &triple = mRenderTexturePtrs.front();
+
+        SDL_Texture *texture = std::get<0>(triple);
+        const GsRect<Uint16> &src = std::get<1>(triple);
+        const GsRect<Uint16> &dst = std::get<2>(triple);
+
+        if(src.empty())
+        {
+            if(dst.empty())
+            {
+                SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+            }
+            else
+            {
+                SDL_Rect dstSDL = dst.SDLRect();
+                SDL_RenderCopy(renderer, texture, nullptr, &dstSDL);
+            }
+        }
+        else
+        {
+            SDL_Rect srcSDL = src.SDLRect();
+            if(dst.empty())
+            {
+                SDL_RenderCopy(renderer, texture, &srcSDL, nullptr);
+            }
+            else
+            {
+                SDL_Rect dstSDL = dst.SDLRect();
+                SDL_RenderCopy(renderer, texture, &srcSDL, &dstSDL);
+            }
+        }
+
+        mRenderTexturePtrs.pop();
+    }
+
+
     SDL_RenderPresent(renderer);
 #else
 
-    SDL_BlitSurface(mpScreenSfc.get(), NULL, mDisplaySfc, NULL);
+    // Blit the stuff
+    mpScreenSfc->blitScaledTo(mDisplaySfc);
 
-	// Flip the screen (We use double-buffering on some systems.)
-    SDL_Flip(mDisplaySfc);
+    // Flip the screen (We use double-buffering on some systems.)
+    mDisplaySfc.flip();
+
 #endif
 
 }

@@ -12,11 +12,15 @@
 #include <base/CInput.h>
 #include <base/video/CVideoDriver.h>
 #include <base/GsLogging.h>
-#include <base/FindFile.h>
+#include <base/utils/FindFile.h>
 #include <base/PointDevice.h>
-#include "common/CSettings.h"
+#include <fileio/CConfiguration.h>
 
 // Input Events
+
+bool pollLocked = false;
+SDL_sem *pollSem = nullptr;
+
 
 #if defined(CAANOO) || defined(WIZ) || defined(GP2X)
 #include "sys/wizgp2x.h"
@@ -43,6 +47,12 @@ CInput::CInput()
 	loadControlconfig(); // we want to have the default settings in all cases
 	startJoyDriver(); // not for iPhone for now, could cause trouble (unwanted input events)
 #endif
+
+
+     //Create the semaphor
+    pollSem = SDL_CreateSemaphore(1);
+
+    mVirtualInput.init();
 }
 
 /**
@@ -146,12 +156,12 @@ bool CInput::startJoyDriver()
 {
 	gLogging.textOut("JoyDrv_Start() : ");
 
-	if (SDL_Init( SDL_INIT_JOYSTICK ) < 0)
+    if (SDL_Init( SDL_INIT_JOYSTICK ) < 0)
 	{
 		gLogging.ftextOut("JoyDrv_Start() : Couldn't initialize SDL: %s<br>", SDL_GetError());
 		return 1;
 	}
-	else
+    else
 	{
 		const size_t joyNum = SDL_NumJoysticks();
 		if( joyNum > 0 )
@@ -317,6 +327,20 @@ std::string CInput::getEventShortName(int command, unsigned char input)
 	return buf;
 }
 
+
+
+void CInput::render()
+{
+    if(!mVirtualInput.active())
+        return;
+
+    GsWeakSurface blit(gVideoDriver.getBlitSurface());
+    mVirtualInput.render(blit);
+}
+
+
+
+
 std::string CInput::getEventName(int command, unsigned char input)
 {
 	std::string buf;
@@ -423,6 +447,7 @@ void CInput::setupNewEvent(Uint8 device, int position)
  */
 void CInput::readNewEvent()
 {
+
 	stInputCommand &lokalInput = InputCommand[remapper.mapDevice][remapper.mapPosition];
 
 	// This function is used to configure new input keys.
@@ -495,8 +520,6 @@ void CInput::readNewEvent()
     }
 }
 
-bool CInput::getExitEvent(void) {	return m_exit;	}
-
 bool CInput::getTwoButtonFiring(int player) { return TwoButtonFiring[player]; }
 void CInput::setTwoButtonFiring(int player, bool value) { TwoButtonFiring[player]=value; }
 
@@ -513,17 +536,20 @@ void CInput::transMouseRelCoord(Vector2D<float> &Pos,
 }
 
 
+
+
 /**
- * \brief	Called every logic cycle. This triggers the events that occur and process them trough various functions
+ * \brief	Called every logic cycle. This triggers the events that occur and process them through various functions
  */
 void CInput::pollEvents()
 {
-    if(!m_EventList.empty())
-        m_EventList.clear();
+    // Semaphore
+    SDL_SemWait( pollSem );
 
     if(remapper.mappingInput)
     {
         readNewEvent();
+        SDL_SemPost( pollSem );
         return;
     }
 
@@ -546,40 +572,50 @@ void CInput::pollEvents()
 
     auto &dispRect = gVideoDriver.getVidConfig().m_DisplayRect;
 
-#ifndef WIN32 // For some odd reason under Windows the clickGameArea must be zero
-    if( !gVideoDriver.isOpenGL() )
-#endif
+
+/*#if SDL_VERSION_ATLEAST(2, 0, 0)
+#else
+    //if( !gVideoDriver.isOpenGL() )
+#endif*/
     {
         clickGameArea.x = 0;
         clickGameArea.y = 0;
     }
 
+
+
 	// While there's an event to handle
 	while( SDL_PollEvent( &Event ) )
 	{
+        bool passSDLEventVec = true;
+
 		switch( Event.type )
 		{
 		case SDL_QUIT:
 			gLogging.textOut("SDL: Got quit event!");
 			m_exit = true;
 			break;
-		case SDL_KEYDOWN:
-			processKeys(1);
+        case SDL_KEYDOWN:
+            passSDLEventVec = processKeys(1);
 			break;
 		case SDL_KEYUP:
-			processKeys(0);
-			break;
+            passSDLEventVec = processKeys(0);
+            break;
 		case SDL_JOYAXISMOTION:
+            passSDLEventVec = true;
 			processJoystickAxis();
 			break;
 		case SDL_JOYBUTTONDOWN:
+            passSDLEventVec = true;
 			processJoystickButton(1);
 			break;
 		case SDL_JOYBUTTONUP:
+            passSDLEventVec = true;
 			processJoystickButton(0);
 			break;
 
 		case SDL_JOYHATMOTION:
+            passSDLEventVec = true;
 			processJoystickHat();
 			break;
 
@@ -620,16 +656,17 @@ void CInput::pollEvents()
             }
             else if(Event.button.button == 4) // scroll up
             {
-                gEventManager.add( new MouseWheelEvent( CVec(0.0, -1.0) ) );
+                gEventManager.add( new MouseWheelEvent( Vector2D<float>(0.0, -1.0) ) );
             }
             else if(Event.button.button == 5) // scroll down
             {
-                gEventManager.add( new MouseWheelEvent( CVec(0.0, 1.0) ) );
+                gEventManager.add( new MouseWheelEvent( Vector2D<float>(0.0, 1.0) ) );
             }
 
 			break;
 
 		case SDL_MOUSEBUTTONUP:
+            passSDLEventVec = true;
             transMouseRelCoord(Pos, Event.motion, clickGameArea);
             m_EventList.add( new PointingDevEvent( Pos, PDE_BUTTONUP ) );
             gPointDevice.mPointingState.mActionButton = 0;
@@ -643,6 +680,15 @@ void CInput::pollEvents()
             gPointDevice.mPointingState.mPos = Pos;
 			break;
 		}
+
+        if(passSDLEventVec)
+        {
+            mSDLEventVec.push_back(Event);
+        }
+        else
+        {
+            mBackEventBuffer.push_back(Event);
+        }
 	}
 #ifdef MOUSEWRAPPER
 	// Handle mouse emulation layer
@@ -699,15 +745,7 @@ void CInput::pollEvents()
 	WIZ_AdjustVolume( volume_direction );
 #endif
 
-    // Fix up settings if everything gets messed up
-	if (gInput.getHoldedKey(KF) &&
-		gInput.getHoldedKey(KI) &&
-		gInput.getHoldedKey(KX))
-	{
-		g_pSettings->loadDefaultGraphicsCfg();
-		g_pSettings->saveDrvCfg();
-        gVideoDriver.start();
-	}
+    SDL_SemPost( pollSem );
 }
 
 /**
@@ -796,18 +834,30 @@ void CInput::sendKey(int key){	immediate_keytable[key] = true;	}
  * 			was triggered.
  * \param	keydown	this parameter tells if the keys is down or has already been released.
  */
-void CInput::processKeys(int keydown)
+bool CInput::processKeys(int keydown)
 {
+    bool passSDLEventVec = true;
+
 	// Input for player commands
-	for(int i=0 ; i<MAX_COMMANDS ; i++)
+    for(int j=0 ; j<NUM_INPUTS ; j++)
 	{
-		for(int j=0 ; j<NUM_INPUTS ; j++)
+        for(int i=0 ; i<MAX_COMMANDS ; i++)
 		{
 			if(InputCommand[j][i].keysym == Event.key.keysym.sym &&
 					InputCommand[j][i].joyeventtype == ETYPE_KEYBOARD)
+            {
 				InputCommand[j][i].active = (keydown) ? true : false;
+
+                if(i == IC_BACK)
+                {
+                    passSDLEventVec = false;
+                }
+            }
 		}
 	}
+
+
+
 
 	// ... and for general keys
     switch(Event.key.keysym.sym)
@@ -875,7 +925,7 @@ void CInput::processKeys(int keydown)
 
 		case SDLK_F1:immediate_keytable[KF1]	= keydown;  break;
 		case SDLK_F2:immediate_keytable[KF2]	= keydown;  break;
-		case SDLK_F3:immediate_keytable[KF3]	= keydown;  break;
+        case SDLK_F3:immediate_keytable[KF3]	= keydown;  break;
 		case SDLK_F4:immediate_keytable[KF4]	= keydown;  break;
 		case SDLK_F5:immediate_keytable[KF5]	= keydown;  break;
 		case SDLK_F6:immediate_keytable[KF6]	= keydown;  break;
@@ -940,6 +990,9 @@ void CInput::processKeys(int keydown)
 		if(getPressedKey(KPERIOD)) immediate_keytable[KGREATER] = keydown;
 		if(getPressedKey(KSLASH)) immediate_keytable[KQUESTION] = keydown;
 	}
+
+    return passSDLEventVec;
+
 }
 
 #ifdef MOUSEWRAPPER
@@ -1202,7 +1255,7 @@ bool CInput::getPulsedCommand(int player, int command, int msec)
 
 bool CInput::mouseClicked()
 {
-    // If you click, open the menu
+    // Check event queue for the clicked button
 	std::deque< std::shared_ptr<CEvent> >::iterator it = m_EventList.begin();
 
 	for( ; it != m_EventList.end() ; it++ )
@@ -1215,7 +1268,6 @@ bool CInput::mouseClicked()
 				m_EventList.erase(it);
 				return true;
 			}
-
 		}
 	}
 	return false;
@@ -1279,6 +1331,14 @@ void CInput::flushKeys(void)
 	memset(immediate_keytable,false,KEYTABLE_SIZE);
 	memset(last_immediate_keytable,false,KEYTABLE_SIZE);
 	memset(firsttime_immediate_keytable,false,KEYTABLE_SIZE);
+}
+
+/**
+  * @brief flushEvent This will clear the whole event list
+  */
+void CInput::flushEvents()
+{
+    m_EventList.clear();
 }
 
 struct TouchButton
@@ -1520,9 +1580,15 @@ void CInput::renderOverlay()
 }
 
 /**
- * \brief	flushes both key and commands queue
+ * \brief	flushes all the input events
  */
-void CInput::flushAll(void){ flushKeys(); flushCommands(); }
+void CInput::flushAll()
+{
+    flushKeys();
+    flushCommands();
+    flushEvents();
+}
+
 
 /**
  * \brief	shuts down the input driver.
@@ -1537,4 +1603,47 @@ void CInput::shutdown()
 	}
 }
 
+bool CInput::readSDLEventVec(std::vector<SDL_Event> &evVec)
+{
+    SDL_SemWait( pollSem );
+
+    if(mSDLEventVec.empty())
+    {
+        SDL_SemPost( pollSem );
+        return false;
+    }
+
+    evVec = mSDLEventVec;
+
+    mSDLEventVec.clear();
+
+    SDL_SemPost( pollSem );
+
+    return true;
+}
+
+void CInput::pushBackButtonEventExtEng()
+{
+    SDL_SemWait( pollSem );
+
+    if(mBackEventBuffer.empty())
+    {
+        SDL_SemPost( pollSem );
+        return;
+    }
+
+    // Take one event and send an down and up event
+    for( SDL_Event ev : mBackEventBuffer )
+    {
+        ev.type = SDL_KEYDOWN;
+        mSDLEventVec.push_back(ev);
+        ev.type = SDL_KEYUP;
+        mSDLEventVec.push_back(ev);
+        break;
+    }
+
+    mBackEventBuffer.clear();
+
+    SDL_SemPost( pollSem );
+}
 

@@ -4,7 +4,7 @@
  *  Created on: 04.06.2009
  *      Author: gerstrong
  */
-#include "hardware/Configurator.h"
+#include "../Configurator.h"
 
 #ifdef USE_OPENGL
 
@@ -13,7 +13,6 @@
 #include <base/CInput.h> // for CInput::renderOverlay
 #include "graphics/GsGraphics.h"
 #include <base/GsLogging.h>
-#include "graphics/PerSurfaceAlpha.h"
 
 
 // gamerect is the base resolution for the game which is scaled with the filter
@@ -42,8 +41,8 @@ bool COpenGL::resizeDisplayScreen(const GsRect<Uint16>& newDim)
     const int w = m_VidConfig.mAspectCorrection.w;
     const int h = m_VidConfig.mAspectCorrection.h;
 
-    // Render a black surface which cleans the screen, in case there already is some content in the screen
-    if(mpScreenSfc)
+    // Render a black surface which cleans the screen, in case there already is some content in the screen    
+    if(mpScreenSfc->empty())
     {
         clearSurfaces();
         transformScreenToDisplay();
@@ -56,9 +55,9 @@ bool COpenGL::resizeDisplayScreen(const GsRect<Uint16>& newDim)
     setUpViewPort(mAspectCorrectionRect);
 
 #else
-    mDisplaySfc = SDL_SetVideoMode( newDim.w, newDim.h, 32, m_Mode );
+    mDisplaySfc.setPtr(SDL_SetVideoMode( newDim.w, newDim.h, 32, m_Mode ));
 
-    if (!mDisplaySfc)
+    if (mDisplaySfc.empty())
 	{
 		gLogging.textOut(RED,"VidDrv_Start(): Couldn't create a SDL surface: %s<br>", SDL_GetError());
 		return false;
@@ -81,8 +80,7 @@ void COpenGL::collectSurfaces()
 
 void COpenGL::clearSurfaces()
 {
-    auto screen = mpScreenSfc.get();
-    SDL_FillRect(screen, NULL, SDL_MapRGB(screen->format,0,0,0) );
+    mpScreenSfc->fillRGB(0,0,0);
 }
 
 
@@ -108,16 +106,24 @@ static void createTexture(GLuint& tex, GLint oglfilter, GLsizei potwidth, GLsize
 
 bool COpenGL::init()
 {
-	CVideoEngine::init();
-	const GLint oglfilter = m_VidConfig.m_opengl_filter;
+	CVideoEngine::init();	
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)    
+
+    Uint32 flags = SDL_WINDOW_OPENGL;
+
+    if(m_VidConfig.Fullscreen)
+        flags |= SDL_WINDOW_FULLSCREEN;
+    else
+        flags |= (SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+
+
     window = SDL_CreateWindow("Commander Genius",
                               SDL_WINDOWPOS_CENTERED,
                               SDL_WINDOWPOS_CENTERED,
                               m_VidConfig.m_DisplayRect.w,
                               m_VidConfig.m_DisplayRect.h,
-                              SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+                              flags);
 
     glcontext = SDL_GL_CreateContext(window);
     
@@ -159,6 +165,12 @@ bool COpenGL::init()
 	// Enable Texture loading for the blit screen
 	glEnable(m_texparam);
     
+
+    GLint oglfilter = GL_LINEAR;
+    if(m_VidConfig.mRenderScQuality == "nearest")
+        const GLint oglfilter = GL_NEAREST;
+
+
     createTexture(m_texture, oglfilter, m_GamePOTScaleDim.w, m_GamePOTScaleDim.h);
 	
 	if(m_VidConfig.m_ScaleXFilter <= 1)
@@ -205,10 +217,7 @@ bool COpenGL::init()
 	{ // In that case we can do a texture based rendering
 	  createTexture(m_texFX, oglfilter, m_GamePOTScaleDim.w, m_GamePOTScaleDim.h, true);
 	} 
-    /*else
-	{
-	  createTexture(m_texFX, oglfilter, m_GamePOTScaleDim.w, m_GamePOTScaleDim.h, true);
-    }*/
+
 #endif
 	
 	// If there were any errors
@@ -283,7 +292,7 @@ void COpenGL::loadSurface(GLuint texture, SDL_Surface* surface)
     
 //#else
 
-    SDL_LockSurface(mpScreenSfc.get());
+    mpScreenSfc->lock();
 
 	// First apply the conventional filter if any (GameScreen -> FilteredScreen)
     /*if(m_VidConfig.m_ScaleXFilter > 1) //ScaleX
@@ -296,18 +305,18 @@ void COpenGL::loadSurface(GLuint texture, SDL_Surface* surface)
     //else // Otherwise, blit to a POT-sized surface
     /*{
 		// While blitting, no involved surface should be locked.
-        SDL_BlitSurface(surface, NULL, FilteredSurface, NULL);
+        BlitSurface(surface, NULL, FilteredSurface, NULL);
 
         SDL_LockSurface(FilteredSurface);
     }*/
 
 	glTexImage2D(m_texparam, 0, internalFormat,
-                mpScreenSfc->w,
-                mpScreenSfc->h,
+                mpScreenSfc->width(),
+                mpScreenSfc->height(),
 				0, externalFormat,
-                GL_UNSIGNED_BYTE, mpScreenSfc->pixels);
+                GL_UNSIGNED_BYTE, mpScreenSfcgetSDLSurface()->pixels);
 
-    SDL_UnlockSurface(mpScreenSfc.get());
+    mpScreenSfc->unlock();
 //#endif
 }
 
@@ -341,7 +350,7 @@ void COpenGL::transformScreenToDisplay()
 
 	glEnable(GL_BLEND);
 
-    loadSurface(m_texture, mpScreenSfc.get());
+    loadSurface(m_texture, *mpScreenSfc.getSDLSurface());
 	renderTexture(m_texture);
 
 	glDisableClientState(GL_VERTEX_ARRAY);

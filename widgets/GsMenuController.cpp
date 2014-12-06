@@ -7,8 +7,7 @@
 
 #include "GsMenuController.h"
 #include <base/CInput.h>
-#include "sdl/music/CMusic.h"
-#include "common/CBehaviorEngine.h"
+#include <cassert>
 
 void CMenuController::clearMenuStack()
 {
@@ -22,13 +21,13 @@ void CMenuController::pumpEvent(const CEvent *evPtr)
     if( const OpenMenuEvent* openMenu = dynamic_cast<const OpenMenuEvent*>(evPtr) )
     {
         CBaseMenu &menu = *openMenu->mMenuDialogPointer.get();
-        menu.init();
+        menu.refresh();
 
         // Select the second element. The first one (0) is the close button.
         menu.select(1);
 
         if( !mMenuStack.empty() )
-        menu.setProperty( CBaseMenu::CANGOBACK );
+            menu.setProperty( CBaseMenu::CANGOBACK );
 
         mMenuStack.push_back( openMenu->mMenuDialogPointer );
     }
@@ -39,10 +38,6 @@ void CMenuController::pumpEvent(const CEvent *evPtr)
     else if( dynamic_cast<const CloseAllMenusEvent*>(evPtr) )
     {
         clearMenuStack();
-    }
-    else
-    {
-        //mMenuStack.back()->release().pump();
     }
 }
 
@@ -58,22 +53,14 @@ void CMenuController::ponder(const float deltaT)
 
 void CMenuController::popBackMenu()
 {
+    // This should not be called when menu stack is empty
+    assert(!mMenuStack.empty());
+
     mMenuStack.back()->release();
     mMenuStack.pop_back();
     
     if(mMenuStack.empty())
-    {
-        // The last menu has been removed. Restore back the game status
-        g_pBehaviorEngine->setPause(false);
-
-        // Check if music was playing
-        if(g_pMusicPlayer->active())
-        {
-            if(!g_pMusicPlayer->playing())
-                g_pMusicPlayer->play();
-        }
-
-		
+    {		
         // When menu is closed hide the cursor
         //SDL_ShowCursor(SDL_DISABLE);
     }

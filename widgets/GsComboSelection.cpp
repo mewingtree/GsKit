@@ -16,18 +16,7 @@ CGUIComboSelection::CGUIComboSelection( const std::string& text,
 mText(text),
 mOptionsList( optionsList ),
 mOLCurrent( mOptionsList.begin() )
-{
-
-/*	if(g_pBehaviorEngine->getEngine() == ENGINE_VORTICON)
-	{
-		mFontID = 1;
-		drawButton = &CGUIComboSelection::drawVorticonStyle;
-	}
-	else if(g_pBehaviorEngine->getEngine() == ENGINE_GALAXY)
-	{
-    }
-*/
-}
+{}
 
 
 const std::string& CGUIComboSelection::getSelection()
@@ -131,5 +120,15 @@ void CGUIComboSelection::processRender(const GsRect<float> &RectDispCoordFloat)
     // Now lets draw the text of the list control
     GsFont &Font = gGraphics.getFont(mFontID);
 
-    Font.drawFontCentered( blitsfc, mText, lRect.x, lRect.w, lRect.y, lRect.h,false );
+    const int fontHeight = 8;
+    //const int textX = lRect.x+24+(mText.size()+2)*fontHeight;
+    const int textY = lRect.y+((lRect.h-fontHeight)/2);
+
+
+    Font.drawFont( blitsfc, mText, lRect.x+24, textY, false );
+    Font.drawFont( blitsfc, ":", lRect.x+24+mText.size()*8, textY, false );
+
+    const std::string text = (*mOLCurrent);
+    Font.drawFont( blitsfc, text, lRect.x+24+(mText.size()+2)*fontHeight, textY, false );
+
 }

@@ -15,7 +15,9 @@
 #include <string>
 
 #include "CVidConfig.h"
+#include <graphics/GsSurface.h>
 #include <memory>
+#include <queue>
 
 
 struct SDL_Surface_Deleter
@@ -76,13 +78,12 @@ public:
     virtual void transformScreenToDisplay() = 0;
 	virtual void shutdown();
 
-    SDL_Surface *createSurface(std::string name, bool alpha, int width, int height, int bpp, int mode);
+    //SDL_Surface *createSurface(std::string name, bool alpha, int width, int height, int bpp, int mode);
     bool createSurfaces();
     bool createSurfaces(const GsRect<Uint16> &gamerect);
 
-    virtual bool initOverlaySurface( const bool useAlpha,
-                             const Uint16 width,
-                             const Uint16 height ) { return true; }
+    virtual bool initOverlaySurface(const Uint16 width,
+                                    const Uint16 height ) { return true; }
 
 	void fetchStartScreenPixelPtrs(Uint8 *&ScreenPtr, Uint8 *&BlitPtr, unsigned int &width, unsigned int &height);
 	virtual void collectSurfaces() = 0;
@@ -92,7 +93,7 @@ public:
 
     virtual void setLightIntensity(const float intensity) = 0;
 
-    SDL_Surface *getBlitSurface() { return mpGameSfc.get(); }
+    SDL_Surface *getBlitSurface() { return mGameSfc.getSDLSurface(); }
 
 	SDL_Surface *getScrollSurface() { return ScrollSurface; }
 
@@ -119,6 +120,14 @@ public:
     SDL_Window *window;
     SDL_Renderer *renderer;
     SDL_GLContext glcontext;
+
+    /**
+     * @brief mRenderTextures queue that manages pointers to textures defined somewhere in the to be rendered.
+     *        This functionality only works with SDL 2.0 so but might get extended later
+     * @note  Do not manage the memory of these pointers. The owers of the textures have to do that!
+     */
+    std::queue< std::tuple< SDL_Texture*, const GsRect<Uint16>, const GsRect<Uint16> > > mRenderTexturePtrs;
+
 #endif
 
     GsRect<int> mRelativeVisGameArea;
@@ -127,27 +136,38 @@ protected:
 
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-    std::unique_ptr<SDL_Texture, SDL_Texture_Deleter> mpSdlTexture;
+    std::unique_ptr<SDL_Texture, SDL_Texture_Deleter> mpSDLScreenTexture;
 #else
-    SDL_Surface *mDisplaySfc;                // the actual video memory/window
+
+    // it is what you see on your monitor in the end in your window or on fullscreen
+    GsWeakSurface mDisplaySfc;      // the actual video memory/window
 #endif
 
-    std::shared_ptr<SDL_Surface> mpGameSfc;
-    std::shared_ptr<SDL_Surface> mpScreenSfc;
+    // Where all the game is rendered
+    GsSurface mGameSfc;
 
-    //SDL_Surface *BlitSurface;
-    //SDL_Surface *FilteredSurface;
+    // Were the game is transformed to. This is used for internal transformations
+    // before it is shown on the display.
+    // it is not required in case no transformations should performed.
+    GsSurface mFilteredSfc;
+
+    // So the transformation goes in two steps
+    // mGameSfc -> mFilteredSfc -> mDisplaySurface or Texture or similar
+    // Sometimes you have this situation:
+    // mGameSfc -> mDisplaySurface or Texture or similar
+    // This case happens when you don't want to use any software filtering within the game
+    // before you pass it to the view.
+
+    // Through a pointer called mpScreenSfc it is set how the stuff will be rendered on screen
+    GsSurface *mpScreenSfc;
+
+
     SDL_Surface *ScrollSurface;       	// Squared scroll buffer
-
-    //CScaler Scaler;
 
 	const CVidConfig &m_VidConfig;
 
 	Sint16 mSbufferx;
 	Sint16 mSbuffery;
-
-	// Those variables are used for the rendering process, so they don't need to be recalculated
-	unsigned m_dst_slice, m_src_slice;
 
 	unsigned int m_Mode;
 

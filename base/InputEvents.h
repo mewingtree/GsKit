@@ -8,7 +8,8 @@
  *  but more stuff will come.
  */
 
-#include "engine/CEvent.h"
+//#include "engine/CEvent.h"
+#include "GsEvent.h"
 #include "Vector2D.h"
 
 #ifndef INPUTEVENTS_H_

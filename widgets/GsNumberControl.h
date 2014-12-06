@@ -13,7 +13,7 @@
 #include <string>
 #include <graphics/GsSurface.h>
 
-class CGUINumberControl: public CGUIControl
+class CGUINumberControl : public CGUIControl
 {
 public:
 
@@ -22,7 +22,8 @@ public:
 			const int endValue,
 			const int deltaValue,
 			const int value,
-			const bool slider = true);
+            const int fontid,
+            const bool slider);
 
 
 	void increment();
@@ -34,6 +35,8 @@ public:
 	void setSelection( const int value );
 
     void processLogic();
+
+    std::string sliderStr();
 
 	void processRender(const GsRect<float> &RectDispCoordFloat);
 
@@ -50,6 +53,8 @@ protected:
     std::string	mText;
     int mValue;
     const bool mSlider;
+
+    int mLightRatio; // This will blend between selected and unselected item.
 
     const int mStartValue;
     const int mEndValue;

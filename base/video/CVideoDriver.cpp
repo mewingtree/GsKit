@@ -8,8 +8,6 @@
  *  The Rendering itself is performed under COpenGL or CSDLVideo Class depending on what is enabled.
  */
 #include "CVideoDriver.h"
-//#include "input/CInput.h"
-//#include <base/GsTimer.h>
 
 #include <base/video/CSDLVideo.h>
 #include <base/video/COpenGL.h>
@@ -17,8 +15,7 @@
 
 #include "graphics/GsGraphics.h"
 #include <base/GsLogging.h>
-#include <base/FindFile.h>
-#include "graphics/PerSurfaceAlpha.h"
+#include <base/utils/FindFile.h>
 #include <iostream>
 #include <fstream>
 #include <SDL_syswm.h>
@@ -29,6 +26,8 @@ m_mustrefresh(false),
 mSDLImageInUse(false)
 {
 	resetSettings();
+
+    mpPollSem = SDL_CreateSemaphore(1);
 }
 
 CVideoDriver::~CVideoDriver()
@@ -232,6 +231,7 @@ bool CVideoDriver::applyMode()
 		m_VidConfig.Zoom = 1;
 
 	m_VidConfig.m_DisplayRect = *m_Resolution_pos;
+
 	return true;
 }
 
@@ -243,7 +243,7 @@ bool CVideoDriver::setNativeResolution(const GsRect<Uint16> &dispRect)
 bool CVideoDriver::start()
 {
 	bool retval;
-	std::string caption = "Commander Genius";
+    const std::string caption = "Commander Genius";
 #if !SDL_VERSION_ATLEAST(2, 0, 0)
     SDL_WM_SetCaption(caption.c_str(), caption.c_str());
 #endif
@@ -272,15 +272,13 @@ bool CVideoDriver::start()
         }
     }
     else
-    {
 #endif
-		mpVideoEngine.reset(new CSDLVideo(m_VidConfig));
+    {
+        CSDLVideo *sdlVideoPtr = new CSDLVideo(m_VidConfig);
+        mpVideoEngine.reset(sdlVideoPtr);
 		retval = mpVideoEngine->init();
         gLogging.textOut("will be using SDL Video<br>");
-
-#ifdef USE_OPENGL
 	}
-#endif
 
 	// Now SDL will tell if the bpp works or changes it, if not supported.
 	// this value is updated here!
@@ -304,14 +302,12 @@ void CVideoDriver::setScaleType(bool IsNormal)
 
 // defines the scroll-buffer that is used for blitScrollSurface(). It's normally passed by a CMap Object
 // it might have when a level-map is loaded.
-void CVideoDriver::updateScrollBuffer(CMap &map)
-{
-	map.drawAll();
-
+void CVideoDriver::updateScrollBuffer(const Sint16 SBufferX, const Sint16 SBufferY)
+{	
     const int drawMask = getScrollSurface()->w-1;
 
-    mpVideoEngine->UpdateScrollBufX(map.m_scrollx, drawMask);
-    mpVideoEngine->UpdateScrollBufY(map.m_scrolly, drawMask);
+    mpVideoEngine->UpdateScrollBufX(SBufferX, drawMask);
+    mpVideoEngine->UpdateScrollBufY(SBufferY, drawMask);
 }
 
 void CVideoDriver::blitScrollSurface() // This is only for tiles
@@ -332,8 +328,12 @@ void CVideoDriver::clearSurfaces()
 
 void CVideoDriver::updateDisplay()
 {
+    SDL_SemWait( mpPollSem );
+
     mpVideoEngine->filterUp();
     mpVideoEngine->transformScreenToDisplay();
+
+    SDL_SemPost( mpPollSem );
 }
 
 void CVideoDriver::saveCameraBounds(st_camera_bounds &CameraBounds)

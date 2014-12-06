@@ -29,11 +29,18 @@ public:
 
 
     CBaseMenu( const GsRect<float>& rect,
-               GsButton *returnButton );
+               GsButton *returnButton,
+               const CGUIDialog::FXState fx = CGUIDialog::FXState(0));
 
     virtual ~CBaseMenu() { }
 
-    virtual void init() {}
+    /**
+     * @brief refresh This is called, when the MenuController has several loaded menus and suddenly
+     *        the user switches from one menu to another or load one for the first time.
+     *        if your menu is pretty dynamic, please overload that method so it is guaranteed that
+     *        the elements to be refreshed on that called are up to date.
+     */
+    virtual void refresh() {}
 
     void select(const size_t value);
 
@@ -58,6 +65,7 @@ public:
 
     void updateGraphics()
     {
+        refresh();
         mpMenuDialog->updateGraphics();
     }
 

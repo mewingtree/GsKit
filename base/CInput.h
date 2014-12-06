@@ -14,9 +14,10 @@
 #include <base/utils/Geometry.h>
 #include <base/GsEvent.h>
 #include <base/InputEvents.h>
-//#include "InputEvents.h"
 
 #include <base/Singleton.h>
+#include <base/GsVirtualinput.h>
+
 
 #define gInput	CInput::get()
 
@@ -156,7 +157,7 @@ struct stInputCommand
 class CInput : public GsSingleton<CInput>
 {
 public:
-	CInput();
+    CInput();
 
 	/**
 	 * \brief transforms a mouse click from the screen coordinates to the relative coordinates
@@ -189,7 +190,8 @@ public:
 	bool getPressedCommand(int player, int command);
 	bool getPressedAnyCommand(const int player);
 	bool getPressedAnyButtonCommand(const int player);
-	bool getExitEvent(void);
+    bool getExitEvent()
+    {  return m_exit;  }
 
 	bool getTwoButtonFiring(int player);
 	void setTwoButtonFiring(int player, bool value);
@@ -197,7 +199,7 @@ public:
 	bool isAnalog(const int player);
 	void enableAnalog(const int player, const bool value);
 
-	bool SuperPogo(const int player) { return mSuperPogo[player]; }
+    bool SuperPogo(const int player) { return mSuperPogo[player]; }
 	void setSuperPogo(const int player, const bool value) { mSuperPogo[player] = value; }
 
 	bool ImpossiblePogo(const int player) { return mImpPogo[player]; }
@@ -205,6 +207,12 @@ public:
 
 	bool AutoGun(const int player) { return mFullyAutomatic[player]; }
 	void setAutoGun(const int player, const bool value) { mFullyAutomatic[player] = value; }
+
+    /**
+     * @brief render will render stuff the input want's to get on the screen.
+     *        These are usually overlay where you can touch or click, like virtual gamepads.
+     */
+    void render();
 
 
 	/**
@@ -230,11 +238,12 @@ public:
 	bool startJoyDriver();
 	void saveControlconfig();
 
-	void flushKeys(void);
-	void flushCommands(void);
+    void flushCommands();
 	void flushCommand(int command);
 	void flushCommand(int player, int command);
-	void flushAll(void);
+    void flushKeys();
+    void flushEvents();
+    void flushAll();
 
 	void renderOverlay(); // for mouse wrapper gfx or other stuff
 
@@ -243,11 +252,35 @@ public:
 	bool MappingInput()
 	{ return remapper.mappingInput; }
 
+    /**
+     * @brief readSDLEventVec Use this for engine which want to access the SDL Events directly
+     */
+    bool readSDLEventVec(std::vector<SDL_Event> &evVec);
+
+    /**
+     * @brief pushBackButtonEventExtEng Use this if want to add the event that normally would
+     *        make open the menu. This event will be processed by the engine for other stuff
+     */
+    void pushBackButtonEventExtEng();
+
 private:
+
+    // Class for overlays when a virtual gamepad or keyboard is needed. For example on mobiles devices
+    GsVirtualInput mVirtualInput;
 
     // Input Events
     CEventContainer m_EventList;
 
+
+
+    // SDL_Event Vector
+    //
+    /**
+     * @brief mSDLEventVec  A vector which stores after every poll process the Event that were triggered.
+     *        For the Dosbox fusion this is needed, since our system can only use polling once otherwise it might get confused.
+     */
+    std::vector<SDL_Event> mSDLEventVec;
+    std::vector<SDL_Event> mBackEventBuffer;
 
 	SDL_Event Event;
 	std::list<SDL_Joystick*> mp_Joysticks;
@@ -277,7 +310,7 @@ private:
 	    int mapPosition;
 	} remapper;
 
-	void processKeys(int value);
+    bool processKeys(int value);
 	void processJoystickAxis();
 	void processJoystickHat();
 	void processJoystickButton(int value);
@@ -286,5 +319,6 @@ private:
 	void processMouse(SDL_Event& ev);
 	void processMouse(int x, int y, bool down, int index);
 };
+
 
 #endif /* CINPUT_H_ */

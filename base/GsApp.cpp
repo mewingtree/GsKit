@@ -16,16 +16,12 @@
 #include <base/video/CVideoDriver.h>
 #include <base/video/GsEffectController.h>
 #include <base/utils/StringUtils.h>
+#include <graphics/GsGraphics.h>
 #include <widgets/GsMenuController.h>
 
 
 #include <base/CInput.h>
 #include <base/GsArguments.h>
-#include "sdl/sound/CSound.h"
-#include "common/CSettings.h"
-
-#include "graphics/GsGraphics.h"
-
 
 
 std::string getArgument( int argc, char *argv[], const std::string& text )
@@ -81,7 +77,6 @@ void GsApp::cleanup()
 GsApp::~GsApp()
 {
     gEventManager.unregSink(&mSink);
-    g_pSound->destroy();
 }
 
 
@@ -105,25 +100,11 @@ bool GsApp::init(int argc, char *argv[])
     // Pass all the arguments
     gArgs.passArgs(argc, argv);
 
-	// Check if there are settings on the PC, otherwise use defaults.
-	if(!g_pSettings->loadDrvCfg())
-	{
-		m_firsttime = true;
-		gLogging.textOut(RED,"First time message: CG didn't find the driver config file. ");
-		gLogging.textOut(RED,"However, it generated some default values and will save them now.\n");
-		g_pSettings->saveDrvCfg();
-	}
-
-	if(!g_pSettings->loadGameOptions())
-	{
-	    g_pSettings->loadDefaultGameCfg();
-	}
-
 	// Setup the Hardware using the settings we have loaded
 	gLogging.textOut(GREEN,"Loading hardware settings...<br>");
     if(!loadDrivers())
 	{
-		gLogging.textOut(RED,"The game cannot start, because you do not meet the hardware requirements.<br>");
+        gLogging.textOut(RED,"The program cannot start, because you do not meet the hardware requirements.<br>");
 		return false;
 	}
 	
@@ -243,10 +224,7 @@ bool GsApp::loadDrivers()
 {
 	// Init graphics
     if (!gVideoDriver.start()) return false;
-	
-	// Init the sound
-	g_pSound->init();
-	
+		
 	return true;
 }
 
@@ -276,6 +254,8 @@ void GsApp::render()
         mpCurEngine->render();
 
     gMenuController.render();
+
+    gInput.render();
 }
 
 
@@ -323,13 +303,6 @@ void GsApp::runMainCycle()
 
         start = timerTicks();
 
-        // GameState previous;
-        // GameState current;
-
-        /*if ( elapsed > 0.25 )
-             elapsed = 0.25;	  // note: max frame time to avoid spiral of death
-        */
-
         acc += elapsed;
 
         // Perform the game cycle
@@ -343,11 +316,6 @@ void GsApp::runMainCycle()
 
             // Ponder Game Control
             ponder(logicLatency);
-
-            /*
-              previousState = currentState;
-              integrate( currentState, logicLatency );
-            */
 
             acc -= logicLatency;
         }
@@ -365,13 +333,6 @@ void GsApp::runMainCycle()
         // When enabled, it also will apply Filters
         gVideoDriver.updateDisplay();
 
-        /*
-         const double alpha = acc / logicLatency;
-
-         State state = currentState*alpha + previousState * ( 1.0 - alpha );
-
-         render( state );
-        */
 
         elapsed = timerTicks() - start;
         total_elapsed += elapsed;

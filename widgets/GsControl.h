@@ -11,6 +11,7 @@
 #define CGUICONTROL_H_
 
 #include <base/InputEvents.h>
+#include <base/utils/Geometry.h>
 
 class CGUIControl
 {
@@ -46,8 +47,11 @@ public:
 	{	mRect = rect;	}
 
 
-	void enable( const bool value )
+    void enable( const bool value )
     {	mEnabled = value;	}
+
+    bool isEnabled()
+    {   return mEnabled;    }
 
     /*void setHovered( const bool value )
     {	mHovered = value;	}*/
@@ -57,9 +61,6 @@ public:
 
     bool isSelected()
     { return mSelected; }
-
-    /*bool getHovered()
-    {	return mHovered;	}*/
 
 
     bool Up()
@@ -80,9 +81,10 @@ public:
     // The relative rect describes the rect which is normally tied to its parent.
     GsRect<float> mRect;
 	
-    bool mEnabled;
 
 protected:
+
+    bool mEnabled;
     
 	int mFontID;
 

@@ -2,9 +2,21 @@
 #ifndef __GS_SURFACE__
 #define __GS_SURFACE__
 
-#include <base/video/scaler/CScaler.h>
+//#include <base/video/scaler/CScaler.h>
 #include <base/utils/Geometry.h>
+#include <base/video/scaler/CScaler.h>
 #include <memory>
+
+#include <cassert>
+
+static inline int BlitSurface(SDL_Surface *src, SDL_Rect *srcrect,
+                       SDL_Surface *dst, SDL_Rect *dstrect)
+{
+    assert(src);    assert(dst);
+    return SDL_BlitSurface(src, srcrect, dst, dstrect);
+}
+
+
 
 
 class GsWeakSurface
@@ -16,6 +28,17 @@ public:
 
     GsWeakSurface(SDL_Surface *sfc) :
         mpSurface(sfc) {}
+
+    /**
+     * @brief setPtr    Sets the pointer of the surface.
+     *                  This should only be used, if you set the Video Mode through SDL_VideoMode
+     *                  it manages the allocation by itself. So Weak will not destroy it.
+     * @param pSfc
+     */
+    void setPtr(SDL_Surface* pSfc)
+    {
+        mpSurface = pSfc;
+    }
 
     /**
      * \brief Draws rect different than the SDL_Fillrect, because it has a contour and is filled
@@ -58,7 +81,7 @@ public:
                   const Uint32 contourColor);
 
 
-    /**
+    /**SDLKey
      * @brief getPixel given the coordinate it will return the pixel color as Uint32.
      * @param x
      * @param y
@@ -70,19 +93,38 @@ public:
 
     int blitTo(GsWeakSurface &sfc)
     {
-        return SDL_BlitSurface( mpSurface, nullptr, sfc.mpSurface, nullptr );
+        assert(sfc.mpSurface);
+        return BlitSurface( mpSurface, nullptr, sfc.mpSurface, nullptr );
     }
 
     int blitTo(GsWeakSurface &sfc, GsRect<Uint16> &dstRect)
     {
+        assert(mpSurface);
+        assert(sfc.mpSurface);
         SDL_Rect sdlRect = dstRect.SDLRect();
-        return SDL_BlitSurface( mpSurface, nullptr, sfc.mpSurface, &sdlRect );
+        return BlitSurface( mpSurface, nullptr, sfc.mpSurface, &sdlRect );
     }
 
     int blitTo(GsWeakSurface &sfc, const SDL_Rect &sdlRect)
     {
-        return SDL_BlitSurface( mpSurface, nullptr, sfc.mpSurface, const_cast<SDL_Rect*>(&sdlRect) );
+        assert(mpSurface);
+        assert(sfc.mpSurface);
+        return BlitSurface( mpSurface, nullptr, sfc.mpSurface, const_cast<SDL_Rect*>(&sdlRect) );
     }
+
+
+    void blitScaledTo(GsWeakSurface &sfc)
+    {        
+        SDL_Surface *dst = sfc.getSDLSurface();
+        assert(dst);
+        blitScaled(mpSurface,
+                   mpSurface->clip_rect,
+                   dst,
+                   dst->clip_rect,
+                   NONE);
+    }
+    // TODO: We still need a blit scaled operation here!
+
 
     Uint32 mapRGB(const Uint8 r, const Uint8 g, const Uint8 b)
     {
@@ -141,20 +183,20 @@ public:
                       const unsigned char b)
     {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-    SDL_SetColorKey(mpSurface, SDL_TRUE, mapRGB(r, g, b));
-    SDL_SetSurfaceBlendMode(mpSurface, SDL_BLENDMODE_BLEND);
+        SDL_SetColorKey(mpSurface, SDL_TRUE, mapRGB(r, g, b));
+        SDL_SetSurfaceBlendMode(mpSurface, SDL_BLENDMODE_BLEND);
 #else
-    SDL_SetColorKey( mpSurface, SDL_SRCCOLORKEY, mapRGB(r, g, b) );
+        SDL_SetColorKey( mpSurface, SDL_SRCCOLORKEY, mapRGB(r, g, b) );
 #endif
     }
 
+#if SDL_VERSION_ATLEAST(2, 0, 0)
     void setBlendMode(const SDL_BlendMode mode)
     {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-    SDL_SetSurfaceBlendMode( mpSurface, mode );
+        SDL_SetSurfaceBlendMode( mpSurface, mode );
+    }
 #endif
 
-    }
 
 
     Uint8 getAlpha()
@@ -171,6 +213,7 @@ public:
     void setAlpha(const unsigned char alpha)
     {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
+    SDL_SetSurfaceBlendMode( mpSurface, SDL_BLENDMODE_BLEND );
     SDL_SetSurfaceAlphaMod( mpSurface, alpha);
 #else
     SDL_SetAlpha(mpSurface, SDL_SRCALPHA, alpha);
@@ -194,6 +237,44 @@ public:
         return mpSurface;
     }
 
+    /**
+     * @brief empty tells if the surface exists or nothing
+     *              is alloced through create or a previously passed pointer
+     * @return true if no surface is created, otherwise false
+     */
+    bool empty()
+    {
+        return (mpSurface==nullptr);
+    }
+
+    /**
+     * @brief locks the Surface for direct pixel access
+     */
+    void lock()
+    {
+        SDL_LockSurface(mpSurface);
+    }
+
+    /**
+     * @brief unlocks the Surface from direct pixel access
+     */
+    void unlock()
+    {
+        SDL_UnlockSurface(mpSurface);
+    }
+
+
+    /**
+     * @brief flip Flips surface like SDL is supposed to do so...
+     */
+    void flip()
+    {
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+#else
+        SDL_Flip(mpSurface);
+#endif
+    }
+
 
 protected:
 
@@ -215,6 +296,17 @@ public:
         GsWeakSurface(sfc->getSDLSurface())
     {
         sfc->disownSfc();
+    }
+
+    /**
+     * @brief operator = will set the pass the an existing sfc to this one,
+     *        the other one gets emptied in this process
+     * @param sfc
+     */
+    void operator=(GsSurface &sfc)
+    {
+        mpSurface = sfc.getSDLSurface();
+        sfc.disownSfc();
     }
 
 
