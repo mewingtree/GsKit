@@ -69,6 +69,16 @@ public:
     }
 
     /**
+     * @brief setAlpha Set alpha modulation
+     * @param alpha translucency 0-255 from transparent to opaque
+     */
+    void setAlpha( const Uint8 alpha )
+    {
+        //Modulate texture alpha
+        SDL_SetTextureAlphaMod( mpTexture, alpha );
+    }
+
+    /**
      * @brief operator bool For testing the object itself, if the texture is loaded
      */
     operator bool()
@@ -85,6 +95,15 @@ public:
         SDL_DestroyTexture( mpTexture );
     }
 
+
+    /**
+     * @brief getPtr getter to the raw pointer of the texture.
+     * @return Pointer to the texture object is returned
+     */
+    SDL_Texture* getPtr()
+    {
+        return mpTexture;
+    }
 
 private:
 
