@@ -25,6 +25,7 @@ bool GsVirtualInput::init()
 
 //#if SDL_VERSION_ATLEAST(2, 0, 0)
     mOverlay.setBlendMode(SDL_BLENDMODE_BLEND);
+    mOverlay.setAlpha(uint8_t(255.0f*mTranslucency));
 //#endif
 
     mOverlay.fill(SDL_MapRGBA(format, 0, 0, 0, 0 ));
@@ -42,7 +43,7 @@ bool GsVirtualInput::init()
         return false;
     }
 
-    mDPadTexture.setAlpha(uint8_t(255.0f*mTranslucency));
+    mDPadTexture.setBlendMode(SDL_BLENDMODE_BLEND);
 
     // TODO: Up arrow
 
@@ -69,6 +70,8 @@ void GsVirtualInput::render(GsWeakSurface &sfc)
     const Uint16 dpadHeight = clickGameArea.h * dpadSize;
 
     const GsRect<Uint16> dpadRect(0, blit.height()-dpadHeight, dpadWidth, dpadHeight);
+
+    mDPadTexture.setAlpha(uint8_t(255.0f*mTranslucency));
 
     gVideoDriver.addTextureRefToRender(mDPadTexture, dpadRect);
 }

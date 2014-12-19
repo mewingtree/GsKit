@@ -68,6 +68,13 @@ public:
         return (mpTexture==nullptr);
     }
 
+     //Set blending
+    void setBlendMode( SDL_BlendMode blending )
+    {
+         //Set blending function
+        SDL_SetTextureBlendMode( mpTexture, blending );
+    }
+
     /**
      * @brief setAlpha Set alpha modulation
      * @param alpha translucency 0-255 from transparent to opaque
