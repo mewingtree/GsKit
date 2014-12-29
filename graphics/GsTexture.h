@@ -65,7 +65,7 @@ public:
             SDL_FreeSurface( loadedSurface );
         }
 
-        return (mpTexture==nullptr);
+        return (mpTexture!=nullptr);
     }
 
      //Set blending
@@ -90,7 +90,7 @@ public:
      */
     operator bool()
     {
-        return (mpTexture==nullptr);
+        return (mpTexture!=nullptr);
     }
 
     /**
