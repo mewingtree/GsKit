@@ -19,21 +19,28 @@ const int BLEND_SPEED = 16;
 
 
 GsButton::GsButton(const std::string& text,
-			CEvent *ev,
-			const Style style) :
+            CEvent *ev,
+            const Style style,
+            const float red,
+            const float green,
+            const float blue) :
 mText(text),
 mLightRatio(128),
-mEvent(ev)
+mEvent(ev),
+mRed(red),
+mGreen(green),
+mBlue(blue)
 {}
+
 
 bool GsButton::sendEvent(const InputCommands command)
 {
-	if(command == IC_STATUS || command == IC_JUMP)
-	{
-		gEventManager.add(mEvent);
-		return true;
-	}
-	return false;
+    if(command == IC_STATUS || command == IC_JUMP)
+    {
+        gEventManager.add(mEvent);
+        return true;
+    }
+    return false;
 }
 
 
@@ -47,7 +54,7 @@ void GsButton::updateGraphics()
 
 
 void GsButton::processLogic()
-{        
+{
     processPointingState();
 
     if(mEnabled)
@@ -55,10 +62,17 @@ void GsButton::processLogic()
         // For some nice special effects
         if(mHovered || mSelected)
         {
-            if(mLightRatio+BLEND_SPEED < 255)
+            int maxBlend = 224;
+
+            if(mHovered && mSelected)
+            {
+                maxBlend = 255;
+            }
+
+            if(mLightRatio+BLEND_SPEED < maxBlend)
                mLightRatio += BLEND_SPEED;
             else
-               mLightRatio = 255;
+               mLightRatio = maxBlend;
         }
         else // Button is not hovered
         {
@@ -77,7 +91,7 @@ void GsButton::processLogic()
 }
 
 void GsButton::drawNoStyle(SDL_Rect& lRect)
-{        
+{
     GsWeakSurface blitsfc(gVideoDriver.getBlitSurface());
 
     int lComp;
@@ -94,15 +108,21 @@ void GsButton::drawNoStyle(SDL_Rect& lRect)
         lComp = 0xFF;
     }
 
-    const Uint32 fillColor = blitsfc.mapRGBA( lComp, lComp, lComp, 0xFF);
+
+    auto lcompf = float(lComp);
+    auto red   = Uint32(lcompf*mRed);
+    auto green = Uint32(lcompf*mGreen);
+    auto blue  = Uint32(lcompf*mBlue);
+
+    const auto fillColor = blitsfc.mapRGBA( red, green, blue, 0xFF);
 
     GsRect<Uint16> rect(lRect);
 
     blitsfc.drawRect( rect, 1, 0xFFBBBBBB, fillColor );
 
 
-	// Now lets draw the text of the list control
-	GsFont &Font = gGraphics.getFont(mFontID);
+    // Now lets draw the text of the list control
+    auto &Font = gGraphics.getFont(mFontID);
 
     if(mEnabled) // If the button is enabled use the normal text, otherwise the highlighted color
         Font.drawFontCentered( blitsfc.getSDLSurface(), mText, lRect.x, lRect.w, lRect.y, lRect.h, false );
@@ -112,11 +132,11 @@ void GsButton::drawNoStyle(SDL_Rect& lRect)
 
 void GsButton::processRender(const GsRect<float> &RectDispCoordFloat)
 {
-	// Transform to the display coordinates
-    GsRect<float> displayRect = mRect;
+    // Transform to the display coordinates
+    auto displayRect = mRect;
 
     displayRect.transform(RectDispCoordFloat);
-	SDL_Rect lRect = displayRect.SDLRect();
+    auto lRect = displayRect.SDLRect();
 
     drawNoStyle(lRect);
 }

@@ -13,6 +13,12 @@
 #include <SDL_version.h>
 
 
+// For RefKeen
+/*extern "C"
+{
+    extern SDL_Texture *g_sdlTexture;
+}*/
+
 
 Uint16 getPowerOfTwo(const Uint16 value)
 {
@@ -196,8 +202,6 @@ bool CVideoEngine::createSurfaces(const GsRect<Uint16> &gamerect)
     SDL_SetSurfaceBlendMode(mGameSfc.getSDLSurface(), SDL_BLENDMODE_NONE);
 #endif
 
-
-
     const int squareSize = getPowerOfTwo( gamerect.h > gamerect.w ? gamerect.h : gamerect.w );
 
     gLogging.ftextOut("ScrollSurface creation of %dx%d!\n<br>",
@@ -238,6 +242,13 @@ bool CVideoEngine::createSurfaces(const GsRect<Uint16> &gamerect)
                                    SDL_TEXTUREACCESS_STREAMING,
                                    gamerect.w*m_VidConfig.m_ScaleXFilter,
                                    gamerect.h*m_VidConfig.m_ScaleXFilter) );
+
+
+//#if defined(REFKEEN) // TODO: Doesn't get defined for some reason
+// For Ref-Keen passing this pointer
+    //g_sdlTexture = mpSDLScreenTexture.get();
+//#endif
+
 #endif
 
 

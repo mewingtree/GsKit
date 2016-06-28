@@ -14,7 +14,15 @@
 #include <base/GsLogging.h>
 #include <base/utils/FindFile.h>
 #include <base/PointDevice.h>
+#include <base/GsTimer.h>
 #include <fileio/CConfiguration.h>
+
+
+// Workaround for RefKeen. If if it transferred to a more C++ structure we have to be able removing that.
+extern "C"
+{
+extern int gDreamsForceClose;
+}
 
 // Input Events
 
@@ -72,7 +80,9 @@ void CInput::resetControls(int player)
 	// At least this warning will tell the people, that something is not right here!
 
 	m_exit = false;
-	m_cmdpulse = 0;
+    gDreamsForceClose = 0;
+
+    m_cmdpulse = 0;
 	m_joydeadzone = 1024;
 
 	memset(immediate_keytable,false,KEYTABLE_SIZE);
@@ -448,7 +458,6 @@ void CInput::setupNewEvent(Uint8 device, int position)
  */
 void CInput::readNewEvent()
 {
-
 	stInputCommand &lokalInput = InputCommand[remapper.mapDevice][remapper.mapPosition];
 
 	// This function is used to configure new input keys.
@@ -521,6 +530,67 @@ void CInput::readNewEvent()
     }
 }
 
+
+void CInput::waitForAnyInput()
+{
+    float acc = 0.0f;
+    float start = timerTicks();
+    float elapsed = 0.0f;
+    float curr = 0.0f;
+
+    bool done = false;
+
+    while(1)
+    {
+        const float logicLatency = gTimer.LogicLatency();
+
+        curr = timerTicks();
+
+        if(gTimer.resetLogicSignal())
+            start = curr;
+
+        elapsed = curr - start;
+
+        start = timerTicks();
+
+        acc += elapsed;
+
+        // Perform the game cycle
+        while( acc > logicLatency )
+        {
+            // Poll Inputs
+            //gInput.pollEvents();
+
+            //pollEvents();
+
+            // TODO: We might introduce a nice timer here, but really required, because if we get here,
+            // everything is halted anyways. It only might reduce the amount of CPU cycles to reduce...
+
+            if(getPressedAnyCommand())
+            {
+                done = true;
+            }
+
+            acc -= logicLatency;
+        }
+
+        if(done)
+            break;
+
+
+        elapsed = timerTicks() - start;
+
+        int waitTime = logicLatency - elapsed;
+
+        // wait time remaining in current loop
+        if( waitTime > 0 )
+            timerDelay(waitTime);
+
+    }
+
+}
+
+
 bool CInput::getTwoButtonFiring(int player) { return TwoButtonFiring[player]; }
 void CInput::setTwoButtonFiring(int player, bool value) { TwoButtonFiring[player]=value; }
 
@@ -530,10 +600,10 @@ void CInput::enableAnalog(const int player, const bool value) { mAnalogAxesMovem
 
 void CInput::transMouseRelCoord(Vector2D<float> &Pos,
 								const SDL_MouseMotionEvent motion,
-								const GsRect<Uint16> &transformRect)
+                                const GsRect<Uint16> &activeArea)
 {
-    Pos.x = ( static_cast<float>(motion.x-transformRect.x)/static_cast<float>(transformRect.w) );
-    Pos.y = ( static_cast<float>(motion.y-transformRect.y)/static_cast<float>(transformRect.h) );
+    Pos.x = ( static_cast<float>(motion.x-activeArea.x)/static_cast<float>(activeArea.w) );
+    Pos.y = ( static_cast<float>(motion.y-activeArea.y)/static_cast<float>(activeArea.h) );
 }
 
 
@@ -569,19 +639,34 @@ void CInput::pollEvents()
 			InputCommand[j][i].lastactive = InputCommand[j][i].active;
 
 
-    GsRect<Uint16> clickGameArea = gVideoDriver.mpVideoEngine->getAspectCorrRect();
+    GsRect<Uint16> activeArea = gVideoDriver.mpVideoEngine->getAspectCorrRect();
 
     auto &dispRect = gVideoDriver.getVidConfig().m_DisplayRect;
 
+    // TODO: It seems that Win32 Build get different coordinates. I still don't know why...
+    // Maybe I'm doing something wrong here!
+#ifdef WIN32
+    //if( !gVideoDriver.isOpenGL() )
+    {
+        activeArea.x = 0;
+        activeArea.y = 0;
+    }
+#endif
 
-/*#if SDL_VERSION_ATLEAST(2, 0, 0)
+
+#if SDL_VERSION_ATLEAST(2, 0, 0)    
+    if( !gVideoDriver.isOpenGL() )
+    {
+        activeArea.x = 0;
+        activeArea.y = 0;
+    }
 #else
     //if( !gVideoDriver.isOpenGL() )
-#endif*/
-    {
-        clickGameArea.x = 0;
-        clickGameArea.y = 0;
-    }
+    /*{
+        activeArea.x = 0;
+        activeArea.y = 0;
+    }*/
+#endif
 
 
 
@@ -595,6 +680,8 @@ void CInput::pollEvents()
 		case SDL_QUIT:
 			gLogging.textOut("SDL: Got quit event!");
 			m_exit = true;
+            gDreamsForceClose = 1;
+
 			break;
         case SDL_KEYDOWN:
             passSDLEventVec = processKeys(1);
@@ -653,7 +740,7 @@ void CInput::pollEvents()
             {                                                
                 if(Event.button.button <= 3)
                 {
-                    transMouseRelCoord(Pos, Event.motion, clickGameArea);
+                    transMouseRelCoord(Pos, Event.motion, activeArea);
                     mpVirtPad->mouseDown(Pos);
                 }
             }
@@ -661,7 +748,7 @@ void CInput::pollEvents()
             {
                 if(Event.button.button <= 3)
                 {
-                    transMouseRelCoord(Pos, Event.motion, clickGameArea);
+                    transMouseRelCoord(Pos, Event.motion, activeArea);
                     m_EventList.add( new PointingDevEvent( Pos, PDE_BUTTONDOWN ) );
                     gPointDevice.mPointingState.mActionButton = 1;
                     gPointDevice.mPointingState.mPos = Pos;
@@ -681,13 +768,13 @@ void CInput::pollEvents()
 		case SDL_MOUSEBUTTONUP:
             if(mpVirtPad && mpVirtPad->active())
             {
-                transMouseRelCoord(Pos, Event.motion, clickGameArea);
+                transMouseRelCoord(Pos, Event.motion, activeArea);
                 mpVirtPad->mouseUp(Pos);
             }
             else
             {
                 passSDLEventVec = true;
-                transMouseRelCoord(Pos, Event.motion, clickGameArea);
+                transMouseRelCoord(Pos, Event.motion, activeArea);
                 m_EventList.add( new PointingDevEvent( Pos, PDE_BUTTONUP ) );
                 gPointDevice.mPointingState.mActionButton = 0;
                 gPointDevice.mPointingState.mPos = Pos;
@@ -696,7 +783,7 @@ void CInput::pollEvents()
 			break;
 
 		case SDL_MOUSEMOTION:
-            transMouseRelCoord(Pos, Event.motion, clickGameArea);
+            transMouseRelCoord(Pos, Event.motion, activeArea);
             m_EventList.add( new PointingDevEvent( Pos, PDE_MOVED ) );
             gPointDevice.mPointingState.mPos = Pos;
 			break;
@@ -759,6 +846,7 @@ void CInput::pollEvents()
 	{
 		gLogging.textOut("User exit request!");
 		m_exit = true;
+        gDreamsForceClose = 1;
 	}
 #endif
 
@@ -1344,6 +1432,8 @@ void CInput::flushCommand(int player, int command)
 	InputCommand[player][command].firsttimeactive = false;
 }
 
+
+
 /**
  * \brief	this will forget every key that was typed before
  */
@@ -1424,7 +1514,7 @@ static TouchButton* getPhoneButton(int x, int y, TouchButton phoneButtons[]) {
 	return NULL;
 }
 
-
+#ifdef MOUSEWRAPPER
 static bool checkMousewrapperKey(int& key) {
 	switch(key) {
 		case KLEFT: case KRIGHT: case KUP: case KDOWN:
@@ -1440,6 +1530,7 @@ static bool checkMousewrapperKey(int& key) {
 	// just too many keys ...
 	return true;
 }
+#endif
 
 void CInput::processMouse()
 {

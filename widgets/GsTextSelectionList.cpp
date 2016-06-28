@@ -13,7 +13,6 @@
 
 #include "GsTextSelectionList.h"
 
-const float TEXT_SIZE = 10.0f;
 
 CGUITextSelectionList::CGUITextSelectionList()  :
     mHoverSelection(0),
@@ -100,6 +99,9 @@ void CGUITextSelectionList::addText(const std::string &text)
 
 void CGUITextSelectionList::processLogic()
 {
+    if(!mEnabled)
+        return;
+
 	// Here we check if the mouse-cursor/Touch entry clicked on something!!
 
     const float bw = gVideoDriver.getGameResolution().w;
@@ -110,11 +112,16 @@ void CGUITextSelectionList::processLogic()
 	const float fy = mRect.y;
 	const float fh = mRect.h;
 
-    const float y_innerbound_min = fy + static_cast<float>(TEXT_SIZE)/bh;
-	const float y_innerbound_max = y_innerbound_min +
-            static_cast<float>( mItemList.size()*TEXT_SIZE )/bh;
+    GsFont &Font = gGraphics.getFont(mFontID);
+    const int pixth = Font.getPixelTextHeight();
 
-    const float x_innerbound_min = fx + static_cast<float>(TEXT_SIZE)/bw;
+    const float textHeight = (pixth+2);
+
+    const float y_innerbound_min = fy + static_cast<float>(textHeight)/bh;
+	const float y_innerbound_max = y_innerbound_min +
+            static_cast<float>( mItemList.size()*textHeight )/bh;
+
+    const float x_innerbound_min = fx + static_cast<float>(textHeight)/bw;
 
 
     GsRect<float> rRect(fx, fy, fw, fh);
@@ -132,7 +139,7 @@ void CGUITextSelectionList::processLogic()
 
         if( mousePos.y > fy && mousePos.y < y_innerbound_max )
         {
-            int newselection = ((mousePos.y-fy)*bh/TEXT_SIZE) - 1 + mScrollbar.scrollPos();
+            int newselection = ((mousePos.y-fy)*bh/textHeight) - 1 + mScrollbar.scrollPos();
 
             if( mousePos.x > x_innerbound_min && mousePos.y > y_innerbound_min)
             {
@@ -155,62 +162,80 @@ void CGUITextSelectionList::processLogic()
 void CGUITextSelectionList::processRender(const GsRect<float> &RectDispCoordFloat)
 {
 	// Blit the List surface
-	SDL_Surface *Blitsurface = gVideoDriver.getBlitSurface();
+    SDL_Surface *pBlitsurface = gVideoDriver.getBlitSurface();
 
 	// Transform to the display coordinates
     GsRect<float> displayRect = mRect;
 	displayRect.transform(RectDispCoordFloat);
 
 	SDL_Rect lRect = displayRect.SDLRect();
-	SDL_FillRect(Blitsurface, &lRect, 0xFFFFFFFF);
+
+
+    if(!mEnabled)
+    {
+        SDL_FillRect(pBlitsurface, &lRect, 0xFFDFDFDF);
+    }
+    else
+    {
+        SDL_FillRect(pBlitsurface, &lRect, 0xFFFFFFFF);
+    }
 
 	// Now lets draw the text of the list control
-	GsFont &Font = gGraphics.getFont(mFontID);
+    auto &Font = gGraphics.getFont(mFontID);
+    const int pixth = Font.getPixelTextHeight();
+    const int pixtw = pixth; // NOTE: We assume here, that the height and width are the same. Invalid to galaxy fonts!
 
 	// Move 16 Pixel so we have space for the cursor/twirl to show the selection
     const int sepHeight = Font.getPixelTextHeight()+2;
 	const int xpos = lRect.x+16+1;
 	const int ypos = lRect.y+10;
-	unsigned int textlimitWidth = (lRect.w-16)/8;
+    unsigned int textlimitWidth = (lRect.w-16)/pixtw;
 
     mScrollbar.mLastToShow = (lRect.h/sepHeight)-1;
 
-	lRect.h = 10;
+    lRect.h = pixth+2;
     lRect.x += 12;
     lRect.w -= 12;
 	std::string trimmedText;
-	std::list<std::string> :: iterator it = mItemList.begin();
+    auto it = mItemList.begin();
 
     for(int i=0 ; i<mScrollbar.scrollPos() ; it++, i++);
 
     for ( int line = 0;  it != mItemList.end() && line<mScrollbar.mLastToShow ; it++, line++ )
 	{
-        if(mPressedSelection == int(line) + mScrollbar.scrollPos() )
+        // Current line to be rendered
+        const int curLinePos = static_cast<int>(line) + mScrollbar.scrollPos();
+
+        if(mPressedSelection == curLinePos )
         {
-            lRect.y = ypos+(line*10)-1;
-            SDL_FillRect(Blitsurface, &lRect, 0xFFA5A5F1);
+            lRect.y = ypos+(line*lRect.h)-1;
+            SDL_FillRect(pBlitsurface, &lRect, 0xFFA5A5F1);
         }
-        else if(mReleasedSelection == int(line) + mScrollbar.scrollPos() )
+        else if(mReleasedSelection == curLinePos )
 		{
-            lRect.y = ypos+(line*10)-1;
+            lRect.y = ypos+(line*lRect.h)-1;
 
             if(mSelected)
-                SDL_FillRect(Blitsurface, &lRect, 0xFFB5B5F1);
+                SDL_FillRect(pBlitsurface, &lRect, 0xFFB5B5F1);
             else
-                SDL_FillRect(Blitsurface, &lRect, 0xFFC5C5C5);
+                SDL_FillRect(pBlitsurface, &lRect, 0xFFC5C5C5);
 		}
-        else if(mHoverSelection == int(line) + mScrollbar.scrollPos() )
+        else if(mHoverSelection == curLinePos )
         {
             lRect.y = ypos+(line*sepHeight)-1;
-            SDL_FillRect(Blitsurface, &lRect, 0xFFE5E5F1);
+            SDL_FillRect(pBlitsurface, &lRect, 0xFFE5E5F1);
         }
 
 
 		trimmedText = *it;
-		if(trimmedText.size() > textlimitWidth)
-			trimmedText = trimmedText.substr(0, textlimitWidth);
 
-		Font.drawFont(Blitsurface, trimmedText, xpos, ypos+(line*10), false);
+        // If the text is too large to show, show a part of it. (by trimming)
+		if(trimmedText.size() > textlimitWidth)
+        {
+			trimmedText = trimmedText.substr(0, textlimitWidth);
+        }
+
+        Font.drawFont(pBlitsurface, trimmedText, xpos, ypos+(line*lRect.h), false);
 	}
 
     mScrollbar.mMaxScrollAmt = mItemList.size()-mScrollbar.lastToShow();
