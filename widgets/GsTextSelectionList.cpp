@@ -142,16 +142,34 @@ void CGUITextSelectionList::processLogic()
 
         if( mousePos.y > fy && mousePos.y < y_innerbound_max )
         {
-            int newselection = ((mousePos.y-fy)*bh/textHeight) /*- halfBorderHeight*/ + mScrollbar.scrollPos();
+            int newselection = ( ((mousePos.y-fy)*bh- halfBorderHeight )/textHeight) /*- halfBorderHeight*/ + mScrollbar.scrollPos();
 
             if( mousePos.x > x_innerbound_min && mousePos.y > y_innerbound_min)
             {
-                if(mHovered)
-                    mHoverSelection = newselection;
-                if(mPressed)
-                    mPressedSelection = newselection;
-                if(mReleased)
-                    mReleasedSelection = newselection;
+                if(mHoverTriggers)
+                {
+                    if(mHovered)
+                    {
+                        mHoverSelection = newselection;
+                        mPressedSelection = newselection;
+                        mReleasedSelection = newselection;
+                    }
+                }
+                else
+                {
+                    if(mHovered)
+                    {
+                        mHoverSelection = newselection;
+                    }
+                    if(mPressed)
+                    {
+                        mPressedSelection = newselection;
+                    }
+                    if(mReleased)
+                    {
+                        mReleasedSelection = newselection;
+                    }
+                }
             }
         }
     }
@@ -213,25 +231,25 @@ void CGUITextSelectionList::processRender(const GsRect<float> &RectDispCoordFloa
 
         if( mPressedSelection == curLinePos )
         {
-            rect.y = ypos+(line*rect.h)-halfBorderHeight;
-            blitsfc.fillRGBA(rect, 0xA5, 0xA5, 0xF1, 0xFF);
+            rect.y = ypos+(line*rect.h);
+            blitsfc.fillRGBA(rect, 0x95, 0xA5, 0xF1, 0xFF);
         }
         else if( mReleasedSelection == curLinePos )
 		{
-            rect.y = ypos + (line*rect.h) - halfBorderHeight;
+            rect.y = ypos + (line*rect.h);
 
             if(mSelected)
             {
-                blitsfc.fillRGBA(rect, 0xB5, 0xB5, 0xF1, 0xFF);
+                blitsfc.fillRGBA(rect, 0xC5, 0xC5, 0xF1, 0xFF);
             }
             else
             {
-                blitsfc.fillRGBA(rect, 0xC5, 0xC5, 0xC5, 0xFF);
+                blitsfc.fillRGBA(rect, 0xB5, 0xB5, 0xF1, 0xFF);
             }
 		}
         else if( mHoverSelection == curLinePos )
         {
-            rect.y = ypos+(line*sepHeight) - halfBorderHeight;
+            rect.y = ypos+(line*sepHeight);
             blitsfc.fillRGBA(rect, 0xC5, 0xC5, 0xC5, 0xFF);
         }
 
@@ -244,7 +262,7 @@ void CGUITextSelectionList::processRender(const GsRect<float> &RectDispCoordFloa
 			trimmedText = trimmedText.substr(0, textlimitWidth);
         }
 
-        Font.drawFont(blitsfc, trimmedText, xpos, ypos+(line*rect.h), false);
+        Font.drawFont(blitsfc, trimmedText, xpos, ypos+(line*rect.h)+halfBorderHeight, false);
 	}
 
     mScrollbar.mMaxScrollAmt = mItemList.size()-mScrollbar.lastToShow();
