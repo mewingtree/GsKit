@@ -216,6 +216,17 @@ public:
         #endif
     }
 
+    void setColorKey(const Uint8 r, const Uint8 g, const Uint8 b)
+    {
+        auto colorkey = SDL_MapRGB( mpSurface->format, r, g, b );
+
+        #if SDL_VERSION_ATLEAST(2, 0, 0)
+            SDL_SetColorKey(mpSurface, SDL_TRUE, colorkey);
+        #else
+            SDL_SetColorKey(mpSurface, SDL_SRCCOLORKEY, colorkey);
+        #endif
+    }
+
 
     Uint8 getAlpha()
     {
@@ -354,6 +365,18 @@ public:
         mpSurface = SDL_CreateRGBSurface(flags, width, height, depth,
                                          Rmask, Gmask, Bmask, Amask);
     }
+
+    /**
+     * @brief createRGBSurface  Just create a simple RGB Surface
+     * @param rect  Rect for the new surface
+     */
+    void createRGBSurface( const SDL_Rect &rect );
+
+
+    /**
+     * @brief makeBlitCompatible    Ensure the given surface will be compatible to what it blitted
+     */
+    void makeBlitCompatible();
 
     /**
      * @brief createFromSDLSfc      Call this if you want to use another SDL_Surface creation function which returns
