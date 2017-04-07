@@ -102,7 +102,9 @@ void CVideoDriver::initResolutionList()
 
 	// We have a resolution list, clear it and create a new one.
     if(!m_Resolutionlist.empty())
+    {
         m_Resolutionlist.clear();
+    }
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 
@@ -224,7 +226,7 @@ bool CVideoDriver::applyMode()
 
 	// Check if some zoom/filter modes are illogical and roll them back accordingly
 	if ((m_VidConfig.Zoom == 3 && m_VidConfig.m_ScaleXFilter == 1)
-			&& !m_VidConfig.m_opengl)
+			&& !m_VidConfig.mOpengl)
 		m_VidConfig.Zoom = 2;
 
 	if (m_VidConfig.Zoom == 0)
@@ -255,14 +257,14 @@ bool CVideoDriver::start()
 	gLogging.textOut("Starting graphics driver...<br>");
 
 #ifdef USE_OPENGL
-	if (m_VidConfig.m_opengl) // If OpenGL could be set, initialize the
+    if (m_VidConfig.mOpengl) // Try to use OpenGL if enabled by the user
 	{
 		mpVideoEngine.reset(new COpenGL(m_VidConfig));
 		retval = mpVideoEngine->init();
 
 		if (!retval)
 		{
-			m_VidConfig.m_opengl = false;
+			m_VidConfig.mOpengl = false;
 			applyMode();
 			mpVideoEngine.reset(new CSDLVideo(m_VidConfig));
 			retval = mpVideoEngine->init();
@@ -313,7 +315,7 @@ void CVideoDriver::updateScrollBuffer(const Sint16 SBufferX, const Sint16 SBuffe
 }
 
 void CVideoDriver::blitScrollSurface() // This is only for tiles
-// Therefore the name should be changed
+                                       // Therefore the name should be changed
 {
 	mpVideoEngine->blitScrollSurface();
 }
@@ -330,7 +332,12 @@ void CVideoDriver::clearSurfaces()
 
 void CVideoDriver::updateDisplay()
 {
-    mpVideoEngine->filterUp();
+    if(m_VidConfig.mHorizBorders > 0)
+    {
+        mpVideoEngine->drawHorizBorders();
+    }
+
+    mpVideoEngine->scaleAndFilter();
     mpVideoEngine->transformScreenToDisplay();
 }
 
@@ -375,9 +382,6 @@ CVidConfig &CVideoDriver::getVidConfig()
 	return m_VidConfig;
 }
 
-short CVideoDriver::getZoomValue() {
-	return m_VidConfig.Zoom;
-}
 
 void CVideoDriver::isFullscreen(const bool value) {
 	m_VidConfig.Fullscreen = value;

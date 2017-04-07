@@ -13,6 +13,7 @@
 
 #include <SDL.h>
 #include <base/video/scaler/CScaler.h>
+#include <base/utils/Color.h>
 
 #include <string>
 
@@ -55,11 +56,16 @@ public:
 	GsRect<Uint16> m_GameRect;	// Also called Screenspace.
 	GsRect<Uint16> m_DisplayRect; // The Fullscreen-Resolution or the Window Size
 
+    Color mBorderColors; /** Colors of the border (Clear colors) */
+
+    int mHorizBorders = 0; /** Horizontal border bars for a more CRT feeling */
+
 	bool Fullscreen;
     filterOptionType m_ScaleXFilter;
 	bool m_normal_scale;
 	unsigned short Zoom;
-	bool m_opengl;
+    bool mOpengl;
+    bool mVPad = false;
 	GsRect<int> mAspectCorrection;
 	bool m_special_fx;
 	bool vsync;

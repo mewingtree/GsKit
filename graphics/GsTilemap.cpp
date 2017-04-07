@@ -204,8 +204,15 @@ void GsTilemap::drawTile(SDL_Surface *dst, int x, int y, Uint16 t)
 }
 
 
-void GsTilemap::drawTileBlended(SDL_Surface *dst, int x, int y, Uint16 t, Uint8 amount)
+void GsTilemap::drawTileBlended(SDL_Surface *dst,
+                                const int x, const int y,
+                                const Uint16 t, const Uint8 alpha)
 {
+    if(mTileSurfaceAlpha.empty())
+    {
+        mTileSurfaceAlpha.createCopy(mTileSurface);
+    }
+
     SDL_Rect src_rect, dst_rect;
     src_rect.x = (t%m_column)<<m_pbasesize;
     src_rect.y = (t/m_column)<<m_pbasesize;
@@ -224,14 +231,14 @@ void GsTilemap::drawTileBlended(SDL_Surface *dst, int x, int y, Uint16 t, Uint8 
         src_rect.w = dst->w - dst_rect.x;
     }
 
-    const auto oldAlpha = mTileSurface.getAlpha();
+    const auto oldAlpha = mTileSurfaceAlpha.getAlpha();
 
-    mTileSurface.setAlpha(amount);
+    mTileSurfaceAlpha.setAlpha(alpha);
 
-    auto rawSDLSfc = mTileSurface.getSDLSurface();
+    auto rawSDLSfc = mTileSurfaceAlpha.getSDLSurface();
     BlitSurface(rawSDLSfc, &src_rect, dst, &dst_rect);
 
-    mTileSurface.setAlpha(oldAlpha);
+    mTileSurfaceAlpha.setAlpha(oldAlpha);
 }
 
 

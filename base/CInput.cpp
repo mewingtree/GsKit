@@ -340,6 +340,9 @@ std::string CInput::getEventShortName(int command, unsigned char input)
 
 void CInput::render()
 {
+    if(!gVideoDriver.VGamePadEnabled())
+        return;
+
     if(!mpVirtPad)
         return;
 
@@ -731,7 +734,7 @@ void CInput::pollEvents()
 		case SDL_MOUSEBUTTONDOWN:
 
             // If Virtual gamepad takes control...
-            if(mpVirtPad && mpVirtPad->active())
+            if(gVideoDriver.VGamePadEnabled() && mpVirtPad && mpVirtPad->active())
             {                                                
                 if(Event.button.button <= 3)
                 {
@@ -761,7 +764,7 @@ void CInput::pollEvents()
 			break;
 
 		case SDL_MOUSEBUTTONUP:
-            if(mpVirtPad && mpVirtPad->active())
+            if(gVideoDriver.VGamePadEnabled() && mpVirtPad && mpVirtPad->active())
             {
                 transMouseRelCoord(Pos, Event.motion, activeArea);
                 mpVirtPad->mouseUp(Pos);
@@ -1500,7 +1503,7 @@ typedef std::set<int> MouseIndexSet;
 static Uint32 phoneButtonLasttime[phoneButtonN] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 static MouseIndexSet phoneButton_MouseIndex[phoneButtonN];
 
-
+#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 static TouchButton* getPhoneButton(int x, int y, TouchButton phoneButtons[]) {
 	for(int i = 0; i < phoneButtonN; ++i) {
 		TouchButton& b = phoneButtons[i];
@@ -1508,6 +1511,7 @@ static TouchButton* getPhoneButton(int x, int y, TouchButton phoneButtons[]) {
 	}
 	return NULL;
 }
+#endif
 
 #ifdef MOUSEWRAPPER
 static bool checkMousewrapperKey(int& key) {

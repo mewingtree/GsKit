@@ -26,16 +26,18 @@ public:
 
     void setLightIntensity(const float intensity);
 
-	void scaleNoFilter( 	SDL_Surface *srcSfc,
-									const SDL_Rect *scrrect,
-									SDL_Surface *dstSfc,
-									const SDL_Rect *dstrect );
+    void scaleNoFilter(	SDL_Surface *srcSfc,
+                        const SDL_Rect *scrrect,
+                        SDL_Surface *dstSfc,
+                        const SDL_Rect *dstrect );
 
 
     bool initOverlaySurface( const Uint16 width,
                              const Uint16 height );
 
     void transformScreenToDisplay();
+
+    void hackIt();
 
 private:
 

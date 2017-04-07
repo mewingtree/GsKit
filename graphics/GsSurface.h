@@ -93,8 +93,10 @@ public:
 
     int blitTo(GsWeakSurface &sfc) const
     {
+        assert(mpSurface);
         assert(sfc.mpSurface);
-        return BlitSurface( mpSurface, nullptr, sfc.mpSurface, nullptr );
+
+        return SDL_BlitSurface(mpSurface, nullptr, sfc.mpSurface, nullptr);
     }
 
     int blitTo(GsWeakSurface &sfc, GsRect<Uint16> &dstRect)
@@ -102,14 +104,21 @@ public:
         assert(mpSurface);
         assert(sfc.mpSurface);
         SDL_Rect sdlRect = dstRect.SDLRect();
-        return BlitSurface( mpSurface, nullptr, sfc.mpSurface, &sdlRect );
+        return SDL_BlitSurface( mpSurface, nullptr, sfc.mpSurface, &sdlRect);
     }
 
     int blitTo(GsWeakSurface &sfc, const SDL_Rect &sdlRect)
     {
         assert(mpSurface);
         assert(sfc.mpSurface);
-        return BlitSurface( mpSurface, nullptr, sfc.mpSurface, const_cast<SDL_Rect*>(&sdlRect) );
+        return SDL_BlitSurface( mpSurface, nullptr, sfc.mpSurface, const_cast<SDL_Rect*>(&sdlRect) );
+    }
+
+    int blitTo(GsWeakSurface &sfc, const SDL_Rect &sdlSrcRect, const SDL_Rect &sdlDstRect)
+    {
+        assert(mpSurface);
+        assert(sfc.mpSurface);
+        return SDL_BlitSurface( mpSurface, const_cast<SDL_Rect*>(&sdlSrcRect), sfc.mpSurface, const_cast<SDL_Rect*>(&sdlDstRect) );
     }
 
 
@@ -190,12 +199,6 @@ public:
 #endif
     }
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-    void setBlendMode(const SDL_BlendMode mode)
-    {
-        SDL_SetSurfaceBlendMode( mpSurface, mode );
-    }
-#endif
 
 
     void setPaletteColors(SDL_Color *Palette)
@@ -239,13 +242,34 @@ public:
     #endif
     }
 
-    void setAlpha(const unsigned char alpha)
+
+    void setBlendMode(const int mode)
     {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-    SDL_SetSurfaceBlendMode( mpSurface, SDL_BLENDMODE_BLEND );
-    SDL_SetSurfaceAlphaMod( mpSurface, alpha);
+        SDL_SetSurfaceBlendMode( mpSurface, SDL_BlendMode(mode) );
+#endif
+    }
+
+
+    int getBlendMode() const
+    {
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+        SDL_BlendMode blend;
+        SDL_GetSurfaceBlendMode( mpSurface, &blend );
+        return int(blend);
 #else
-    SDL_SetAlpha(mpSurface, SDL_SRCALPHA, alpha);
+        return 0;
+#endif
+    }
+
+
+    void setAlpha(const unsigned char alpha)
+    {
+#if SDL_VERSION_ATLEAST(2, 0, 0)                
+        SDL_SetSurfaceBlendMode( mpSurface, SDL_BLENDMODE_BLEND );
+        SDL_SetSurfaceAlphaMod( mpSurface, alpha);
+#else
+        SDL_SetAlpha(mpSurface, SDL_SRCALPHA, alpha);
 #endif
     }
 
@@ -407,16 +431,10 @@ public:
     {
         SDL_Surface *sdlSfc = orig.getSDLSurface();
         SDL_PixelFormat *format = sdlSfc->format;
-        create(sdlSfc->flags,
-               sdlSfc->w,
-               sdlSfc->h,
-               format->BitsPerPixel,
-               format->Rmask,
-               format->Gmask,
-               format->Bmask,
-               format->Amask);
 
-        orig.blitTo(*this);
+        mpSurface = SDL_ConvertSurface(sdlSfc,
+                                       format,
+                                       sdlSfc->flags);
     }
 
     /// Scale routines
