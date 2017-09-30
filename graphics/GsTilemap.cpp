@@ -64,8 +64,8 @@ bool GsTilemap::loadHiresTile( const std::string& filename, const std::string& p
 		}
 		else
 		{
-		  gLogging.textOut(RED, "IMG_Load: %s\n", IMG_GetError());
-		  gLogging.textOut(RED, "IMG_Load: CG will ignore those images\n");
+		  gLogging.textOut(FONTCOLORS::RED, "IMG_Load: %s\n", IMG_GetError());
+		  gLogging.textOut(FONTCOLORS::RED, "IMG_Load: CG will ignore those images\n");
 		}
 	}
 
@@ -197,7 +197,7 @@ void GsTilemap::drawTile(SDL_Surface *dst, int x, int y, Uint16 t)
     BlitSurface(rawSDLSfc, &src_rect, dst, &dst_rect);
 
 #ifdef DEBUG_COLLISION
-	//std::vector<CTileProperties> &TileProp = gpBehaviorEngine->getTileProperties(1);
+	//std::vector<CTileProperties> &TileProp = gBehaviorEngine.getTileProperties(1);
 	//FillSlopeRect(dst, dst_rect, 0xFFFFFFFF, TileProp[t].bup);
 #endif
 

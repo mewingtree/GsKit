@@ -16,19 +16,22 @@
 
 CLogFile::CLogFile() {}
 
-void CLogFile::CreateLogfile(const char *LogName,
+bool CLogFile::CreateLogfile(const std::string &logFName,
                              const std::string &appName,
                              const std::string &version)
 {
 	// Open and empty the log file
-	m_Logfile = OpenGameFile(LogName, "wt");
+    if( !OpenGameFileW(mLogStream, logFName) )
+    {
+        return false;
+    }
 	
 	// Write the head
 	textOut("<html><head><title>LogFile</title></head>");
 	textOut("<body><font face='courier new'>");
 	WriteTopic("Logfile", 3);
 	
-    textOut(BLUE, appName + " v" + version);
+    textOut(FONTCOLORS::BLUE, appName + " v" + version);
 
 	// Mark the Build and Platform
 #ifdef DEBUG
@@ -77,23 +80,26 @@ void CLogFile::CreateLogfile(const char *LogName,
 	textOut("<a href='mailto:gerstrong@gmail.com?subject=CG Logfile'>");
 	textOut("Send E-Mail to me</a><br><br>");
 	
-	fclose(m_Logfile);
-	m_Logfile = OpenGameFile(LogName, "at");
+    mLogStream.close();
+
+    // Reopen it in append mode for further writing.
+    OpenGameFileW(mLogStream, logFName, std::ios_base::app);
+
+    return true;
 }
 
 // Function for writing the topic
 void CLogFile::WriteTopic(const char *Topic, int Size)
-{
+{    
 	textOut("<table cellspacing='0' cellpadding='0' width='100%%' bgcolor='#DFDFE5'>\n");
 	textOut("<tr>\n<tr>\n<td>\n");
 	ftextOut("<font face='arial' size='+%i'>\n", Size);
 	textOut(Topic);
 	textOut("</font>\n</td>\n</tr>\n</table>\n<br>");
-	fflush(m_Logfile);
 }
 
 // The main textOut function
-// Standard textOut (Black color)
+// Standard textOut (FONTCOLORS::BLACK color)
 
 
 // Now with colors
@@ -111,15 +117,15 @@ void CLogFile::textOut(FONTCOLORS Color, bool List, const std::string& Text)
 	// write color tag
 	switch(Color)
 	{
-		case BLACK:
+        case FONTCOLORS::BLACK:
 			textOut("<font color=black>"); break;
-		case RED:
+        case FONTCOLORS::RED:
 			textOut("<font color=red>"); break;
-		case GREEN:
+        case FONTCOLORS::GREEN:
 			textOut("<font color=green>"); break;
-		case BLUE:
+        case FONTCOLORS::BLUE:
 			textOut("<font color=blue>"); break;
-		case PURPLE:
+        case FONTCOLORS::PURPLE:
 			textOut("<font color=purple>"); break;
 	};
 	
@@ -153,16 +159,16 @@ std::string CLogFile::removeHTML(const std::string& input)
     return output;
 }
 
-void CLogFile::textOut(const std::string& Text)
-{
+void CLogFile::textOut(const std::string& text)
+{    
     std::string output;
 	
-    output = removeHTML(Text);
+    output = removeHTML(text);
     if( output.length() > 0 ) {
         notes << output << endl;
     }
-	fprintf(m_Logfile,"%s",Text.c_str());
-	fflush(m_Logfile);
+
+    mLogStream << text;
 }
 
 void CLogFile::ftextOut(const char *Text, ...)
@@ -202,6 +208,24 @@ void CLogFile::ftextOut(FONTCOLORS Color, const char *Text, ...)
 	va_end(pArgList);
 }
 
+CLogFile & CLogFile::operator << (const char *txt)
+{
+    textOut(std::string(txt));
+    return *this;
+}
+
+CLogFile & CLogFile::operator << (const std::string &str)
+{
+    textOut(str);
+    return *this;
+}
+
+CLogFile & CLogFile::operator << (const int val)
+{
+    textOut(to_string(val));
+    return *this;
+}
+
 void CLogFile::FunctionResult (const char *Name,bool Result)
 {
 	if (Result == true)
@@ -224,8 +248,8 @@ void CLogFile::FunctionResult (const char *Name,bool Result)
 	}
 }
 
-CLogFile::~CLogFile() {
+CLogFile::~CLogFile()
+{
 	// Logfile End
 	textOut ("<br><br>End of logfile</font></body></html>");
-	fclose (m_Logfile);
 }

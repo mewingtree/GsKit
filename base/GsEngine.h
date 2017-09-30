@@ -4,7 +4,10 @@
  *  Created on: 28.03.2012
  *      Author: gerstrong
  *
- *  Base for the engine. Some commons functions are performed here!
+ *  Base for the engine.
+ *  It handles the rendering and logic tasks without
+ *  using additional threads.
+ *
  */
 
 #ifndef __GSENGINE_H_

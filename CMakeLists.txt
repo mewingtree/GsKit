@@ -1,8 +1,10 @@
 # CMake file for development of Commander Genius (taken from OLX)
 # This CMake file is used under Linux normally. 
 
-#cmake_minimum_required(VERSION 3.1)
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.1)
+
+OPTION(USE_SDL2 "SDL2 support" Yes)
+
 
 if (CMAKE_VERSION VERSION_LESS "3.1")
   if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
@@ -40,11 +42,10 @@ if(USE_SDL2)
       include(FindSDL2 OPTIONAL)
     else()
       INCLUDE(FindPkgConfig)
-      find_package(SDL2 REQUIRED)
-      find_package(SDL2_image REQUIRED >=2.0.0)
-      #PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
-      #PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
-
+      #find_package(SDL2 REQUIRED)
+      #find_package(SDL2_image REQUIRED >=2.0.0)
+      PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+      PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
 	
     endif()
 
@@ -52,13 +53,15 @@ if(USE_SDL2)
         message(STATUS "Using shared SDL Version 2 for Commander Genius")
         include_directories(${SDL2_INCLUDE_DIRS})
 
-
-
+        message(STATUS "Using shared SDL Version 2 for Commander Genius")
         set(SDL2_INCLUDE_DIRS /Library/Frameworks/SDL2.framework/Headers)
         set(SDL2_IMAGE_INCLUDE_DIRS /Library/Frameworks/SDL2_image.framework/Headers)   
 
+        include_directories(${SDL2_INCLUDE_DIR})
+        include_directories(${SDL2_NET_INCLUDE_DIRS})
+
         include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
-        #include_directories(${SDL2_NET_INCLUDE_DIRS})
+        #include_directories(${SDL2_NET_INCLUDE_DIRS})        
 
         #include_directories(/usr/include/SDL2/)
     endif(SDL2_FOUND)
@@ -103,7 +106,29 @@ Project(GsKit)
 file(GLOB_RECURSE ALL_SRCS_GSKIT_BASE *.c* *.h*)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
+
+
+
+find_package(SDL2 REQUIRED)
+#find_package(SDL2_image REQUIRED)
+
+if(SDL2_FOUND)
+   message(STATUS "Using shared SDL Version 2 for Commander Genius")
+   include_directories(${SDL2_INCLUDE_DIRS})
+   include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+
+   #include_directories(${SDL2_NET_INCLUDE_DIRS})
+
+   include_directories(/usr/include/SDL2/)
+endif(SDL2_FOUND)
+
+
+IF (OPENGL)
+        ADD_DEFINITIONS(-DGL)
+        ADD_DEFINITIONS(-DUSE_OPENGL)
+ENDIF (OPENGL)
+
 add_library(GsKit ${ALL_SRCS_GSKIT_BASE})
 
-
-
+Target_link_libraries(GsKit ${SDL2_LIBRARIES})
+Target_link_libraries(GsKit ${SDL2IMAGE_LIBRARIES})

@@ -26,7 +26,7 @@ class CGUIDialog
 
 public:
 
-    enum FXState
+    enum class FXKind
     {
         NONE = 0,
         EXPAND
@@ -34,7 +34,7 @@ public:
 
 
 	// Constructor which needs the Rect for the placement of the Dialog
-    CGUIDialog(const GsRect<float> &NewRect, const FXState fx = NONE);
+    CGUIDialog(const GsRect<float> &NewRect, const FXKind fx = FXKind::NONE);
 
 	// Automatic Background draw function. It creates the background depending on what engine is currently running
 	void initBackground();
@@ -139,8 +139,10 @@ private:
 	int mSelection;
 	CGUIControl *mpCurrentCtrl;
 
-    // Unused in Galaxy, this is for some dialog effects which are also used in Vorticons Doskeen
-    FXState mFXSetup;
+    // Unused in Galaxy,
+    // this is for some dialog
+    // effects which are also used in Vorticons Doskeen
+    FXKind mFXSetup;
     int mFXhStep;
     int mFXvStep;
 

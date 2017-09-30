@@ -15,21 +15,18 @@
 #include <graphics/GsGraphics.h>
 #include <base/GsLogging.h>
 
-//#include "engine/core/CBehaviorEngine.h"
-
-
 const unsigned int MAX_ELEMENTS_PER_PAGE = 7;
 const unsigned int MAX_STEPS = 20;
 
 
-CGUIDialog::CGUIDialog(const GsRect<float> &SrGsRect, const FXState fx) :
+CGUIDialog::CGUIDialog(const GsRect<float> &SrGsRect, const FXKind fx) :
 mRect(SrGsRect),
 mSelection(0),
 mFXSetup(fx),
 mFXhStep(0),
 mFXvStep(0)
 {
-    if( mFXSetup == EXPAND )
+    if( mFXSetup == FXKind::EXPAND )
     {
         mFXhStep = MAX_STEPS;
         mFXvStep = MAX_STEPS-3;
@@ -321,7 +318,7 @@ void CGUIDialog::drawBorderRect(SDL_Surface *backSfc, const SDL_Rect &Rect)
 void CGUIDialog::processLogic()
 {
     // For the special effect not used in the galaxy engine
-    if( mFXSetup == EXPAND )
+    if( mFXSetup == FXKind::EXPAND )
     {
         if( mFXhStep > 0 )
         {
@@ -393,13 +390,15 @@ void CGUIDialog::processRendering(SDL_Surface *blit)
     if(bgSfc)
     {
 
-        if( mFXSetup == NONE )
+        SDL_Rect lRect;
+
+        if( mFXSetup == FXKind::NONE )
         {
-            BlitSurface( bgSfc, nullptr, blit, nullptr );
+            lRect = gVideoDriver.toBlitRect(mRect);
+            BlitSurface( bgSfc, nullptr, blit, &lRect );
         }
         else
         {
-            SDL_Rect lRect;
 
             if( mFXhStep == 0 && mFXvStep == 0 )
             {
@@ -425,13 +424,13 @@ void CGUIDialog::processRendering(SDL_Surface *blit)
                 lRect = gVideoDriver.toBlitRect(fxRect);
 
                 // Makes the Border look more like in DOS-Keen
-                if( mFXSetup == EXPAND && lRect.h < 16 )
+                if( mFXSetup == FXKind::EXPAND && lRect.h < 16 )
                     lRect.h = 16;
 
                 auto srGsRect = lRect;
                 srGsRect.y = srGsRect.x = 0;
 
-                if( mpTempSfc && mFXSetup == EXPAND )
+                if( mpTempSfc && mFXSetup == FXKind::EXPAND )
                 {
                     auto *tmpSfc = mpTempSfc.get();
                     SDL_FillRect( tmpSfc, &srGsRect, 0xFFFFFFFF );

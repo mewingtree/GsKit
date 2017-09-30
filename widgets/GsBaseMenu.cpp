@@ -14,7 +14,7 @@
 
 CBaseMenu::CBaseMenu(const GsRect<float>& rect,
                      GsButton *returnButton,
-                     const CGUIDialog::FXState fx) :
+                     const CGUIDialog::FXKind fx) :
 mpMenuDialog( new CGUIDialog(rect, fx) ),
 mpReturnButton(returnButton)
 {}
