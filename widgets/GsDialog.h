@@ -28,7 +28,7 @@ public:
 
     enum class FXKind
     {
-        NONE = 0,
+        NONE,
         EXPAND
     };
 
