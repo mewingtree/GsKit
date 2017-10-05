@@ -61,7 +61,7 @@ float   fastSQRT(float x);*/
 template <typename T> T MIN(T a, T b) { return a < b ? a : b; }
 template <typename T> T MAX(T a, T b) { return a > b ? a : b; }
 inline unsigned long MIN(unsigned long a, unsigned int b) { return a < b ? a : b; }
-template <typename T> T CLAMP(const T& num, const T& lower_bound, const T& upper_bound) {
+template <typename T> T CLAMP(T&& num, T&& lower_bound, T&& upper_bound) {
 	return num < lower_bound ? lower_bound : (num > upper_bound ? upper_bound : num); }
 template <typename T> int CLAMP_DIRECT(T& num, const T& lower_bound, const T& upper_bound) {
 	if(num < lower_bound) {

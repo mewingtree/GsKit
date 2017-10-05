@@ -271,7 +271,7 @@ Iterator<char>::Ref HexDump(Iterator<char>::Ref start, PrintOutFct printOutFct, 
 
 //////////////////////////
 // Contains a definition of some common colors, used internally by StrToCol
-Color GetColorByName(const std::string& str, bool& fail)
+GsColor GetColorByName(const std::string& str, bool& fail)
 {
 	fail = false;
 	
@@ -307,16 +307,16 @@ Color GetColorByName(const std::string& str, bool& fail)
 	
 	for (size_t i = 0; i < sizeof(predefined) / sizeof(ColorEntry); ++i)
 		if (stringcaseequal(str, predefined[i].sName))
-			return Color(predefined[i].r, predefined[i].g, predefined[i].b, predefined[i].a);
+			return GsColor(predefined[i].r, predefined[i].g, predefined[i].b, predefined[i].a);
 	
 	fail = true;
 	
-	return Color();
+	return GsColor();
 }
 
 /////////////////////
 // Helper function for HexToCol, accepts only adjusted values
-static void HexToCol_Pure(const std::string& hex, Color& col, bool& fail)
+static void HexToCol_Pure(const std::string& hex, GsColor& col, bool& fail)
 {
 	col.r = MIN(from_string<int>(hex.substr(0,2), std::hex, fail), 255);
 	col.g = MIN(from_string<int>(hex.substr(2,2), std::hex, fail), 255);
@@ -329,10 +329,10 @@ static void HexToCol_Pure(const std::string& hex, Color& col, bool& fail)
 
 ////////////////////////
 // Helper function for StrToCol
-static Color HexToCol(const std::string& hex, bool& fail)
+static GsColor HexToCol(const std::string& hex, bool& fail)
 {
 	fail = false;
-	Color res;
+	GsColor res;
 	
 	// For example FFF for white
 	if (hex.size() == 3)  {
@@ -372,10 +372,10 @@ static Color HexToCol(const std::string& hex, bool& fail)
 	}
 	
 	fail = true;
-	return Color();
+	return GsColor();
 }
 
-std::string ColToHex(Color col) {
+std::string ColToHex(GsColor col) {
 	std::string buf;
 	buf += FixedWidthStr_LeftFill(itoa(col.r, 16), 2, '0') +
 	buf += FixedWidthStr_LeftFill(itoa(col.g, 16), 2, '0') +
@@ -398,7 +398,7 @@ static bool is_percent(const std::string& str)
 
 ///////////////////
 // Returns a color defined function-like: rgba(0, 0, 0, 0)
-static Color ColFromFunc(const std::string& func, bool& fail)
+static GsColor ColFromFunc(const std::string& func, bool& fail)
 {
 	StringBuf tmp(func);
 	
@@ -412,7 +412,7 @@ static Color ColFromFunc(const std::string& func, bool& fail)
 	std::vector<std::string> tokens = params.splitBy(',');
 	if (tokens.size() < 3)  {
 		fail = true;
-		return Color();
+		return GsColor();
 	}
 	
 	// Adjust the tokens
@@ -421,7 +421,7 @@ static Color ColFromFunc(const std::string& func, bool& fail)
 	}
 	
 	// The param count is >= 3
-	Color res;
+	GsColor res;
 	res.r = MIN(255, from_string<int>(tokens[0], fail)); if (is_percent(tokens[0])) res.r = (Uint8)MIN(255.0f, (float)res.r * 2.55f);
 	res.g = MIN(255, from_string<int>(tokens[1], fail)); if (is_percent(tokens[1])) res.g = (Uint8)MIN(255.0f, (float)res.g * 2.55f);
 	res.b = MIN(255, from_string<int>(tokens[2], fail)); if (is_percent(tokens[2])) res.b = (Uint8)MIN(255.0f, (float)res.b * 2.55f);
@@ -433,14 +433,14 @@ static Color ColFromFunc(const std::string& func, bool& fail)
 	return res;
 }
 
-static Color ColFromSeperatedNums(const std::string& txt, bool& fail) {
+static GsColor ColFromSeperatedNums(const std::string& txt, bool& fail) {
 	std::vector<std::string> tokens = explode(txt, ",");
 	if (tokens.size() < 3)  {
 		fail = true;
-		return Color();
+		return GsColor();
 	}
 	
-	Color res;
+	GsColor res;
 	res.r = MIN(255, from_string<int>(tokens[0], fail)); if (is_percent(tokens[0])) res.r = (Uint8)MIN(255.0f, (float)res.r * 2.55f);
 	res.g = MIN(255, from_string<int>(tokens[1], fail)); if (is_percent(tokens[1])) res.g = (Uint8)MIN(255.0f, (float)res.g * 2.55f);
 	res.b = MIN(255, from_string<int>(tokens[2], fail)); if (is_percent(tokens[2])) res.b = (Uint8)MIN(255.0f, (float)res.b * 2.55f);
@@ -454,7 +454,7 @@ static Color ColFromSeperatedNums(const std::string& txt, bool& fail) {
 
 //////////////////
 // Converts a string to a colour
-Color StrToCol(const std::string& str, bool& fail) {
+GsColor StrToCol(const std::string& str, bool& fail) {
 	fail = false;
 	
 	// Create the temp and copy it there
@@ -469,7 +469,7 @@ Color StrToCol(const std::string& str, bool& fail) {
 	// Check for a blank string
 	if (temp.size() == 0)  {
 		fail = true;
-		return Color();
+		return GsColor();
 	}
 	
 	// Is the # character present?
@@ -495,7 +495,7 @@ Color StrToCol(const std::string& str, bool& fail) {
 	return GetColorByName(str, fail);
 }
 
-Color StrToCol(const std::string& str)
+GsColor StrToCol(const std::string& str)
 {
 	bool fail = false;
 	return StrToCol(str, fail);

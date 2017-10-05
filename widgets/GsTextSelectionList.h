@@ -12,6 +12,7 @@
 
 #include "GsControl.h"
 #include "GsScrollbar.h"
+#include <base/utils/Color.h>
 
 #include <list>
 #include <string>
@@ -66,16 +67,24 @@ public:
 
     const std::string &getItemString(const int sel) const
     {
-        return mItemList[sel];
+        return mItemList[sel].mText;
     }
 
 private:
 
-    std::vector<std::string> mItemList;
+    struct item
+    {
+        item(const std::string &text) : mText(text) {}
 
-    int mHoverSelection;
-    int mPressedSelection;
-    int mReleasedSelection;
+        std::string mText; // Text of the current item
+        GsColor mBgColor = GsColor(0xFF, 0xFF, 0xFF, 0xFF);  // Current background color
+    };
+
+    std::vector<item> mItemList;
+
+    int mHoverSelection = 0;
+    int mPressedSelection = -1;
+    int mReleasedSelection = -1;
     
     GsScrollbar mScrollbar;
 	

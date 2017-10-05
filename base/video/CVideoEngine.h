@@ -187,7 +187,7 @@ protected:
      *                      0 means black, but through a config the use might change this
      */
 
-    Color mClearColor;
+    GsColor mClearColor;
 };
 
 #endif /* CVIDEOENGINE_H_ */

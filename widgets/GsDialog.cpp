@@ -71,7 +71,8 @@ std::shared_ptr<CGUIControl> CGUIDialog::addControl( std::unique_ptr<CGUIControl
 
 
 
-std::shared_ptr<CGUIControl> CGUIDialog::addControl( std::unique_ptr<CGUIControl> &newControl )
+std::shared_ptr<CGUIControl>
+CGUIDialog::addControl( std::unique_ptr<CGUIControl> &newControl )
 {    
     auto ctrlPtr = std::shared_ptr<CGUIControl>( move(newControl) );
 
@@ -87,14 +88,16 @@ std::shared_ptr<CGUIControl> CGUIDialog::addControl( std::unique_ptr<CGUIControl
     return ctrlPtr;
 }
 
-std::shared_ptr<CGUIControl> CGUIDialog::addControl( CGUIControl *newControl,
-                                                     const GsRect<float>& RelRect )
+std::shared_ptr<CGUIControl>
+CGUIDialog::addControl( CGUIControl *newControl,
+                        const GsRect<float>& RelRect )
 {
     std::unique_ptr<CGUIControl> ctrl(newControl);
     return addControl( ctrl, RelRect );
 }
 
-std::shared_ptr<CGUIControl> CGUIDialog::addControl( CGUIControl *newControl )
+std::shared_ptr<CGUIControl>
+CGUIDialog::addControl( CGUIControl *newControl )
 {
     std::unique_ptr<CGUIControl> ctrl(newControl);
     return addControl(ctrl);

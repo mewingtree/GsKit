@@ -155,7 +155,7 @@ bool ReadFloat(const std::string& filename, const std::string& section, const st
 
 
 
-bool ReadColour(const std::string& filename, const std::string& section, const std::string& key, Color& value, const Color& defaultv) {
+bool ReadColour(const std::string& filename, const std::string& section, const std::string& key, GsColor& value, const GsColor& defaultv) {
 	std::string string;
 	
 	value = defaultv;
