@@ -1,5 +1,5 @@
 /*
- * CGUIControl.cpp
+ * GsControl.cpp
  *
  *  Created on: 01.11.2011
  *      Author: gerstrong

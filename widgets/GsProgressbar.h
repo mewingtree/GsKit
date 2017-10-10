@@ -3,12 +3,11 @@
 
 #include "GsControl.h"
 
-class GsProgressBar : public GsControl
 /**
  * @brief The GsProgressBar class   Nice Progress bar for Menus
  *        and Commander Keen GUI. It is mainly used by the download manager.
  */
-class GsProgressBar : public CGUIControl
+class GsProgressBar : public GsControl
 {
 public:
 

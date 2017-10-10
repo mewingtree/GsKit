@@ -293,7 +293,9 @@ void GsBitmap::draw(const int x, const int y) const
  * \param y				Y-Coordinate, indicating the position on dst
  * \param dst           Surface where to blit that Bitmap
  */
-void GsBitmap::_draw(const int x, const int y, SDL_Surface *dst) const
+void GsBitmap::_draw(const int x,
+                     const int y,
+                     SDL_Surface *dst) const
 {
     SDL_Rect dst_rect, src_rect;
 

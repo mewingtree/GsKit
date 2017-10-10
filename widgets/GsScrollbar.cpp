@@ -94,11 +94,11 @@ void GsScrollbar::drawScrollBar(const SDL_Rect &lRect)
 
 
     // Set the up and down arrows
-    GsFont &Font = gGraphics.getFont(mFontID);
+    //GsFont &Font = gGraphics.getFont(mFontID);
     blitSurface.fillRGB( bScUpRect, 0x7F, 0x7F, 0x7F);
-    Font.drawFontCentered(blitSurface.getSDLSurface(), "\017", bScUpRect.x, bScUpRect.w, bScUpRect.y, false );
+    //Font.drawFontCentered(blitSurface.getSDLSurface(), "\017", bScUpRect.x, bScUpRect.w, bScUpRect.y, false );
     blitSurface.fillRGB( bScDownRect, 0x7F, 0x7F, 0x7F);
-    Font.drawFontCentered(blitSurface.getSDLSurface(), "\023", bScDownRect.x, bScDownRect.w, bScDownRect.y, false );
+    //Font.drawFontCentered(blitSurface.getSDLSurface(), "\023", bScDownRect.x, bScDownRect.w, bScDownRect.y, false );
 
     mArrowHeight = 10.0f/float(lRect.h);
     mSliderHeight = 8.0f/float(lRect.h);

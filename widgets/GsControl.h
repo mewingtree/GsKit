@@ -1,5 +1,5 @@
 /*
- * CGUIControl.h
+ * GsControl.h
  *
  *  Created on: 30.10.2011
  *      Author: gerstrong
@@ -7,8 +7,8 @@
  *  Base Class for any Type of Control
  */
 
-#ifndef CGUICONTROL_H_
-#define CGUICONTROL_H_
+#ifndef GsControl_H_
+#define GsControl_H_
 
 #include <base/InputEvents.h>
 #include <base/utils/Geometry.h>
@@ -116,4 +116,4 @@ protected:
 };
 
 
-#endif /* CGUICONTROL_H_ */
+#endif /* GsControl_H_ */

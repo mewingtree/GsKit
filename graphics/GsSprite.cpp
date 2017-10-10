@@ -34,8 +34,8 @@ GsSprite GsSprite::operator=(const GsSprite& original)
 }
 
 
-std::shared_ptr<SDL_Surface> GsSprite::createCopySDLSurface(
-        const std::shared_ptr<SDL_Surface>& original)
+std::shared_ptr<SDL_Surface>
+GsSprite::createCopySDLSurface(const std::shared_ptr<SDL_Surface>& original)
 {
     std::shared_ptr<SDL_Surface> surface;
 
