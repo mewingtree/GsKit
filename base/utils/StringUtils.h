@@ -129,8 +129,8 @@ void			ucfirst(std::string& text);
 std::string		ReadUntil(const std::string& text, char until_character = '\n'); // will return whole text if not found
 std::string		ReadUntil(const std::string& text, std::string::const_iterator& start, char until_character, const std::string& alternative = "");
 std::string		ReadUntil(FILE* fp, char until_character = '\n');
-Color			StrToCol(const std::string& str);
-Color			StrToCol(const std::string& str, bool& fail);
+GsColor			StrToCol(const std::string& str);
+GsColor			StrToCol(const std::string& str, bool& fail);
 std::vector<std::string> explode(const std::string& str, const std::string& delim);
 void			freadstr(std::string& result, size_t maxlen, FILE *fp);
 size_t			fwrite(const std::string& txt, size_t len, FILE* fp);
@@ -161,7 +161,7 @@ std::string		UrlEncode(const std::string &data); // Substitute space with + and 
 std::string		AutoDetectLinks(const std::string& text);
 std::string		HtmlEntityUnpairedBrackets(const std::string &txt);
 size_t			GetPosByTextWidth(const std::string& text, int width, GsFont *fnt);
-std::string		ColToHex(Color col);
+std::string		ColToHex(GsColor col);
 std::string		EscapeHtmlTags( const std::string & src );	// Escape all "<" and ">" and "&"
 
 bool			strSeemsLikeChatCommand(const std::string& str);

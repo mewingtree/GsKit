@@ -2,7 +2,7 @@
 #ifndef GS_SURFACE
 #define GS_SURFACE
 
-//#include <base/video/scaler/CScaler.h>
+#include <base/utils/Color.h>
 #include <base/utils/Geometry.h>
 #include <base/video/scaler/CScaler.h>
 #include <memory>
@@ -23,8 +23,7 @@ class GsWeakSurface
 {
 public:
 
-    GsWeakSurface() :
-        mpSurface(nullptr) {}
+    GsWeakSurface() {}
 
     GsWeakSurface(SDL_Surface *sfc) :
         mpSurface(sfc) {}
@@ -164,6 +163,11 @@ public:
     void fillRGB(const GsRect<Uint16> &rect, const Uint8 r, const Uint8 g, const Uint8 b)
     {
         fill( rect, mapRGB(r,g,b) );
+    }
+
+    void fillRGBA(const GsRect<Uint16> &rect, const GsColor &color)
+    {
+        fill( rect, mapRGBA(color.r,color.g,color.b,color.a) );
     }
 
     void fillRGBA(const Uint8 r, const Uint8 g, const Uint8 b, const Uint8 a)

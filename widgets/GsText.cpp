@@ -61,7 +61,32 @@ void CGUIText::setText(const std::string& text)
 
 void CGUIText::processLogic()
 {
+    // Horizontal scrolling.
+    // If Max is zero, nothing need to be scrolled
+    if(mScrollPosMax <= 0)
+        return;
 
+    // Check if scroll position touches the edges
+    if(mScrollPos <= 0)
+    {
+        mScrollDir = ScrollDir::RIGHT;
+        mScrollPos = 0;
+    }
+    else if(mScrollPos >= mScrollPosMax)
+    {
+        mScrollDir = ScrollDir::LEFT;
+        mScrollPos = mScrollPosMax;
+    }
+
+    // Scroll into the direction
+    if(mScrollDir == ScrollDir::LEFT)
+    {
+        mScrollPos -= mScrollVel;
+    }
+    else if(mScrollDir == ScrollDir::RIGHT)
+    {
+        mScrollPos += mScrollVel;
+    }
 }
 
 void CGUIText::processRender(const GsRect<float> &RectDispCoordFloat)
@@ -74,9 +99,36 @@ void CGUIText::processRender(const GsRect<float> &RectDispCoordFloat)
 	// Now lets draw the text of the list control
 	GsFont &Font = gGraphics.getFont(mFontID);
 
-	std::list<std::string>::iterator text = mTextList.begin();
-	for( size_t i=0 ; text != mTextList.end() ; text++, i++ )
+    std::list<std::string>::iterator textIt = mTextList.begin();
+    for( size_t i=0 ; textIt != mTextList.end() ; textIt++, i++ )
 	{
-		Font.drawFontCentered(gVideoDriver.getBlitSurface(), *text, lRect.x, lRect.w, lRect.y+i*8, false);
+        auto &theText = *textIt;
+
+        const int textWidth = Font.calcPixelTextWidth(theText);
+
+        // The tolerance is the amount of pixels at least of difference to consider
+        // for scrolling. We consider a tolerance so strange jittery are avoided for text
+        // that nearly fits
+        const int tol = 2 ;
+
+        // The first text item decides wheter scrolling takes place
+        if(textWidth > lRect.w + tol) // tolerance
+        {
+            const auto diff = textWidth - lRect.w;
+            mScrollPosMax = diff;
+
+            Font.drawFont(gVideoDriver.getBlitSurface(),
+                          theText,
+                          lRect.x-int(mScrollPos),
+                          lRect.y+i*8,
+                          false);
+        }
+        else
+        {
+            Font.drawFontCentered(gVideoDriver.getBlitSurface(), theText, lRect.x, lRect.w, lRect.y+i*8, false);
+            mScrollPosMax = 0;
+        }
+
+
 	}
 }

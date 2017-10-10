@@ -41,8 +41,8 @@ bool		ReadFloat(const std::string& filename, const std::string& section, const s
 bool		ReadIntArray(const std::string& filename, const std::string& section, const std::string& key, int *array, int num_items);
 
 
-struct Color;
-bool	ReadColour(const std::string& filename, const std::string& section, const std::string& key, Color& value, const Color& defaultv);
+struct GsColor;
+bool	ReadColour(const std::string& filename, const std::string& section, const std::string& key, GsColor& value, const GsColor& defaultv);
 
 
 

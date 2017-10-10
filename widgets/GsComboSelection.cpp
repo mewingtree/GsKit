@@ -7,6 +7,7 @@
 
 #include "GsComboSelection.h"
 #include <graphics/GsGraphics.h>
+#include <base/GsLogging.h>
 #include <base/CInput.h>
 #include <base/video/CVideoDriver.h>
 #include <base/GsTimer.h>
@@ -29,8 +30,10 @@ void CGUIComboSelection::cycleOption()
 {
 	// Cycle through the Optionslist
 	mOLCurrent++;
-	if( mOLCurrent == mOptionsList.end() )
+    if( mOLCurrent == mOptionsList.end() )
+    {
 		mOLCurrent =  mOptionsList.begin();
+    }
 }
 
 
@@ -48,10 +51,21 @@ bool CGUIComboSelection::sendEvent(const InputCommands command)
 
 void CGUIComboSelection::setSelection( const std::string& selectionText )
 {
-	// Getting at this point means, that this option never existed
-	mOptionsList.push_back( selectionText );
-	mOLCurrent = mOptionsList.end();
-	mOLCurrent--;
+    auto &&optionIt = mOptionsList.cbegin();
+
+    for ( ; optionIt != mOptionsList.cend() ; optionIt++ )
+    {
+        if(*optionIt == selectionText)
+        {
+            mOLCurrent = optionIt;
+        }
+    }
+
+    if( optionIt == mOptionsList.cend() )
+    {
+        gLogging << "Warning: Option " <<  selectionText
+                 << " does not exist for this selection.";
+    }
 }
 
 
@@ -65,7 +79,9 @@ void CGUIComboSelection::setList(const char **strArray, const int numElem)
 
 
 	for( int i=0 ; i<numElem ; i++ )
+    {
 		mOptionsList.push_back( strArray[i] );
+    }
 
 	mOLCurrent = mOptionsList.begin();
 

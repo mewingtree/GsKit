@@ -202,7 +202,8 @@ bool CVideoEngine::createSurfaces(const GsRect<Uint16> &gamerect)
     gLogging.ftextOut("Gamesurface creation of %dx%d!\n<br>",
                      gamerect.w, gamerect.h );
 
-    mGameSfc.create(m_Mode, gamerect.w, gamerect.h, RES_BPP,
+    mGameSfc.create(m_Mode,
+                    gamerect.w, gamerect.h, RES_BPP,
                     0x00FF0000,
                     0x0000FF00,
                     0x000000FF,

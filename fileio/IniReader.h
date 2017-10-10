@@ -13,7 +13,7 @@
 #include <base/utils/StringUtils.h>
 #include <map>
 
-struct Color;
+struct GsColor;
 
 /*
 	to use this class, you have to create a subclass from it and
@@ -40,7 +40,7 @@ public:
 	bool ReadInteger(const std::string& section, const std::string& key, int *value, int defaultv) const;
 	bool ReadFloat(const std::string& section, const std::string& key, float *value, float defaultv) const;
 	bool ReadIntArray(const std::string& section, const std::string& key, int *array, int num_items) const;
-	bool ReadColour(const std::string& section, const std::string& key, Color& value, const Color& defaultv) const;
+	bool ReadColour(const std::string& section, const std::string& key, GsColor& value, const GsColor& defaultv) const;
 	bool ReadKeyword(const std::string& section, const std::string& key, int *value, int defaultv) const;
 	bool ReadKeyword(const std::string& section, const std::string& key, bool *value, bool defaultv) const;
 	bool ReadKeywordList(const std::string& section, const std::string& key, int *value, int defaultv)const;

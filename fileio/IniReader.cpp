@@ -182,7 +182,7 @@ bool IniReader::ReadFloat(const std::string &section, const std::string &key, fl
 	return true;
 }
 
-bool IniReader::ReadColour(const std::string &section, const std::string &key, Color &value, const Color &defaultv) const
+bool IniReader::ReadColour(const std::string &section, const std::string &key, GsColor &value, const GsColor &defaultv) const
 {
 	std::string string;
 

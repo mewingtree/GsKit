@@ -38,6 +38,19 @@ private:
 	std::unique_ptr<SDL_Surface> mpTextLightSfc;
 	std::unique_ptr<SDL_Surface> mpTextDisabledSfc;
 
+
+    /// Automatic horizontal scrolling in case the text is too big
+    float mScrollPosMax = 0;
+    float mScrollPos = 0;
+    float mScrollVel = 0.3;
+
+    enum class ScrollDir
+    {
+        NONE,
+        LEFT,
+        RIGHT
+    } mScrollDir = ScrollDir::NONE;
+
 };
 
 #endif /* CGUITEXT_H_ */

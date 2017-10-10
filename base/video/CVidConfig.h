@@ -56,7 +56,7 @@ public:
     GsRect<Uint16> mGameRect;	// Also called Screenspace.
     GsRect<Uint16> mDisplayRect; // The Fullscreen-Resolution or the Window Size
 
-    Color mBorderColors; /** Colors of the border (Clear colors) */
+    GsColor mBorderColors; /** Colors of the border (Clear colors) */
     bool mBorderColorsEnabled = false;
 
     int mHorizBorders = 0; /** Horizontal border bars for a more CRT feeling */

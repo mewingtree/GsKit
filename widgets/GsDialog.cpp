@@ -50,8 +50,9 @@ void CGUIDialog::updateGraphics()
 
 
 
-std::shared_ptr<GsControl> CGUIDialog::addControl( std::unique_ptr<GsControl> &newControl,
-                              const GsRect<float>& RelRect )
+std::shared_ptr<GsControl> 
+CGUIDialog::addControl( std::unique_ptr<GsControl> &newControl,
+                        const GsRect<float>& RelRect )
 {
     GsRect<float> AbsRect = RelRect;
 	AbsRect.transform(mRect);
@@ -71,7 +72,8 @@ std::shared_ptr<GsControl> CGUIDialog::addControl( std::unique_ptr<GsControl> &n
 
 
 
-std::shared_ptr<GsControl> CGUIDialog::addControl( std::unique_ptr<GsControl> &newControl )
+std::shared_ptr<GsControl> 
+CGUIDialog::addControl( std::unique_ptr<GsControl> &newControl )
 {    
     auto ctrlPtr = std::shared_ptr<GsControl>( move(newControl) );
 
@@ -87,14 +89,16 @@ std::shared_ptr<GsControl> CGUIDialog::addControl( std::unique_ptr<GsControl> &n
     return ctrlPtr;
 }
 
-std::shared_ptr<GsControl> CGUIDialog::addControl( GsControl *newControl,
-                                                     const GsRect<float>& RelRect )
+std::shared_ptr<GsControl> 
+CGUIDialog::addControl( GsControl *newControl,
+                        const GsRect<float>& RelRect )
 {
     std::unique_ptr<GsControl> ctrl(newControl);
     return addControl( ctrl, RelRect );
 }
 
-std::shared_ptr<GsControl> CGUIDialog::addControl( GsControl *newControl )
+std::shared_ptr<GsControl> 
+CGUIDialog::addControl( GsControl *newControl )
 {
     std::unique_ptr<GsControl> ctrl(newControl);
     return addControl(ctrl);

@@ -9,15 +9,13 @@
 #include <graphics/GsGraphics.h>
 #include <base/CInput.h>
 #include <base/PointDevice.h>
+#include <base/utils/Color.h>
 
 
 #include "GsTextSelectionList.h"
 
 
 CGUITextSelectionList::CGUITextSelectionList()  :
-    mHoverSelection(0),
-    mPressedSelection(-1),
-    mReleasedSelection(-1),
     mScrollbar(this)
 {
     GsRect<float> scrollRect(0.0f, 0.0f, 0.1f, 1.0f);
@@ -93,17 +91,52 @@ bool CGUITextSelectionList::sendEvent(const InputCommands command)
 }
 
 void CGUITextSelectionList::addText(const std::string &text)
-{
-	mItemList.push_back(text);
+{    
+    mItemList.push_back( item(text) );
 }
+
+
 
 void CGUITextSelectionList::processLogic()
 {
     if(!mEnabled)
-        return;
+        return;        
 
-	// Here we check if the mouse-cursor/Touch entry clicked on something!!
+    /// Some logic for colors so we get nice fancy effects
+    auto it = mItemList.begin();
 
+    for(int i=0 ; i<mScrollbar.scrollPos() ; it++, i++);
+
+    for ( int line = 0;
+          it != mItemList.end() && line<mScrollbar.mLastToShow ;
+          it++, line++ )
+    {
+        // Current line to apply the color
+        const int curLinePos = static_cast<int>(line) + mScrollbar.scrollPos();
+
+        if( mPressedSelection == curLinePos )
+        {
+            it->mBgColor.converge( GsColor(0x95, 0xA5, 0xF1, 0xFF) );
+        }
+        else if( mReleasedSelection == curLinePos )
+        {
+            if(mSelected)
+            {
+                it->mBgColor.converge( GsColor(0xC5, 0xC5, 0xF1, 0xFF) );
+            }
+            else
+            {
+                it->mBgColor.converge( GsColor(0xB5, 0xB5, 0xF1, 0xFF) );
+            }
+        }
+        else if( mHoverSelection == curLinePos )
+        {
+            it->mBgColor.converge( GsColor(0xC5, 0xC5, 0xC5, 0xFF) );
+        }
+    }
+
+
+    /// Here we check if the mouse-cursor/Touch entry clicked on something!!
     const float bw = gVideoDriver.getGameResolution().w;
 	const float bh = gVideoDriver.getGameResolution().h;
 
@@ -191,15 +224,15 @@ void CGUITextSelectionList::processRender(const GsRect<float> &RectDispCoordFloa
 
     GsRect<Uint16> origRect(displayRect);
     GsRect<Uint16> rect = origRect;
+   
+    GsColor boxColor(0xDF, 0xDF, 0xDF, 0xFF);
 
-    if(!mEnabled)
+    if(mEnabled)
     {
-        blitsfc.fillRGBA(rect, 0xDF, 0xDF, 0xDF, 0xFF);
+        boxColor = GsColor(0xFF, 0xFF, 0xFF, 0xFF);
     }
-    else
-    {
-        blitsfc.fillRGBA(rect, 0xFF, 0xFF, 0xFF, 0xFF);
-    }
+
+    blitsfc.fillRGBA(rect, boxColor);
 
 	// Now lets draw the text of the list control
     auto &Font = gGraphics.getFont(mFontID);
@@ -224,37 +257,34 @@ void CGUITextSelectionList::processRender(const GsRect<float> &RectDispCoordFloa
 
     for(int i=0 ; i<mScrollbar.scrollPos() ; it++, i++);
 
-    for ( int line = 0;  it != mItemList.end() && line<mScrollbar.mLastToShow ; it++, line++ )
+    for ( int line = 0;
+          it != mItemList.end() && line<mScrollbar.mLastToShow ;
+          it++, line++ )
 	{
         // Current line to be rendered
         const int curLinePos = static_cast<int>(line) + mScrollbar.scrollPos();
 
+        const auto &theColor = it->mBgColor;
+        const auto &theText = it->mText;
+
         if( mPressedSelection == curLinePos )
         {
             rect.y = ypos+(line*rect.h);
-            blitsfc.fillRGBA(rect, 0x95, 0xA5, 0xF1, 0xFF);
+            blitsfc.fillRGBA(rect, theColor);
         }
         else if( mReleasedSelection == curLinePos )
 		{
             rect.y = ypos + (line*rect.h);
-
-            if(mSelected)
-            {
-                blitsfc.fillRGBA(rect, 0xC5, 0xC5, 0xF1, 0xFF);
-            }
-            else
-            {
-                blitsfc.fillRGBA(rect, 0xB5, 0xB5, 0xF1, 0xFF);
-            }
+            blitsfc.fillRGBA(rect, theColor);
 		}
         else if( mHoverSelection == curLinePos )
         {
             rect.y = ypos+(line*sepHeight);
-            blitsfc.fillRGBA(rect, 0xC5, 0xC5, 0xC5, 0xFF);
+            blitsfc.fillRGBA(rect, theColor);
         }
 
 
-        std::string trimmedText = *it;
+        std::string trimmedText = theText;
 
         // If the text is too large to show, show a part of it. (by trimming)
 		if(trimmedText.size() > textlimitWidth)
