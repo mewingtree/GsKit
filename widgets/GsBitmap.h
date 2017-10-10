@@ -15,7 +15,7 @@
 #include "GsControl.h"
 #include "graphics/GsBitmap.h"
 
-class CGUIBitmap : public CGUIControl
+class CGUIBitmap : public GsControl
 {
 public:
 

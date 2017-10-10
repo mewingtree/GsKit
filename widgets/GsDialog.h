@@ -64,15 +64,15 @@ public:
     void updateGraphics();
 
 	// Adds a control instance to the list of controls to be processed.
-    std::shared_ptr<CGUIControl> addControl( std::unique_ptr<CGUIControl> &newControl,
+    std::shared_ptr<GsControl> addControl( std::unique_ptr<GsControl> &newControl,
                                              const GsRect<float>& RelRect );
 
-    std::shared_ptr<CGUIControl> addControl(std::unique_ptr<CGUIControl> &newControl);
+    std::shared_ptr<GsControl> addControl(std::unique_ptr<GsControl> &newControl);
 
-    std::shared_ptr<CGUIControl> addControl( CGUIControl *newControl,
+    std::shared_ptr<GsControl> addControl( GsControl *newControl,
 			 	 const GsRect<float>& RelRect );
 
-    std::shared_ptr<CGUIControl> addControl( CGUIControl *newControl );
+    std::shared_ptr<GsControl> addControl( GsControl *newControl );
 
 
     bool sendEvent( const std::shared_ptr<CEvent> &event );
@@ -87,7 +87,7 @@ public:
 	void setRect(const GsRect<float> &rect);
 	void setPosition(const float x, const float y);
 
-	std::list< std::shared_ptr<CGUIControl> >& getControlList()
+	std::list< std::shared_ptr<GsControl> >& getControlList()
 	{	return mControlList;	}
 
 	const int Selection() const
@@ -95,10 +95,10 @@ public:
 
     void setSelection(const unsigned int sel);
 
-	CGUIControl* CurrentControl()
+	GsControl* CurrentControl()
 	{	return 	mpCurrentCtrl;	}
 
-    void setCurrentControl(CGUIControl* control)
+    void setCurrentControl(GsControl* control)
     {	mpCurrentCtrl = control;	}
 
 
@@ -131,13 +131,13 @@ protected:
 private:
 
 	// List of Controls that the Dialog has.
-	std::list< std::shared_ptr<CGUIControl> > mControlList;
+	std::list< std::shared_ptr<GsControl> > mControlList;
 
 	// SDL_Surface of the Background
     std::shared_ptr<SDL_Surface>    mpTempSfc;
 
 	int mSelection;
-	CGUIControl *mpCurrentCtrl;
+	GsControl *mpCurrentCtrl;
 
     // Unused in Galaxy,
     // this is for some dialog

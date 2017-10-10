@@ -3,7 +3,7 @@
 
 #include "GsControl.h"
 
-class GsScrollbar : public CGUIControl
+class GsScrollbar : public GsControl
 {
 public:
 
@@ -37,7 +37,7 @@ public:
         return mLastToShow;
     }
 
-    GsScrollbar(CGUIControl *parent) :
+    GsScrollbar(GsControl *parent) :
         mScrollPos(0),
         mMaxScrollAmt(0),
         mLastToShow(0),
@@ -51,7 +51,7 @@ public:
     int mLastToShow;
 
 private:
-    CGUIControl *mpParent;
+    GsControl *mpParent;
 
     float mSliderHeight;
     float mArrowHeight;

@@ -17,7 +17,7 @@
 #include <string>
 
 
-class CGUITextSelectionList : public CGUIControl
+class CGUITextSelectionList : public GsControl
 {
 public:
 

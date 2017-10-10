@@ -14,7 +14,7 @@
 
 #include "GsControl.h"
 
-class CGUIText : public CGUIControl
+class CGUIText : public GsControl
 {
 public:
 	CGUIText(const std::string& text);

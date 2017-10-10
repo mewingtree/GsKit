@@ -17,7 +17,7 @@
 #include <graphics/GsSurface.h>
 
 
-class GsButton : public CGUIControl
+class GsButton : public GsControl
 {
 public:
 

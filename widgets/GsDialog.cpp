@@ -50,14 +50,14 @@ void CGUIDialog::updateGraphics()
 
 
 
-std::shared_ptr<CGUIControl> CGUIDialog::addControl( std::unique_ptr<CGUIControl> &newControl,
+std::shared_ptr<GsControl> CGUIDialog::addControl( std::unique_ptr<GsControl> &newControl,
                               const GsRect<float>& RelRect )
 {
     GsRect<float> AbsRect = RelRect;
 	AbsRect.transform(mRect);
 	newControl->mRect = AbsRect;
 
-    auto ctrlPtr = std::shared_ptr<CGUIControl>( move(newControl) );
+    auto ctrlPtr = std::shared_ptr<GsControl>( move(newControl) );
 
     mControlList.push_back( ctrlPtr );
 
@@ -71,9 +71,9 @@ std::shared_ptr<CGUIControl> CGUIDialog::addControl( std::unique_ptr<CGUIControl
 
 
 
-std::shared_ptr<CGUIControl> CGUIDialog::addControl( std::unique_ptr<CGUIControl> &newControl )
+std::shared_ptr<GsControl> CGUIDialog::addControl( std::unique_ptr<GsControl> &newControl )
 {    
-    auto ctrlPtr = std::shared_ptr<CGUIControl>( move(newControl) );
+    auto ctrlPtr = std::shared_ptr<GsControl>( move(newControl) );
 
     mControlList.push_back( ctrlPtr );
 
@@ -87,16 +87,16 @@ std::shared_ptr<CGUIControl> CGUIDialog::addControl( std::unique_ptr<CGUIControl
     return ctrlPtr;
 }
 
-std::shared_ptr<CGUIControl> CGUIDialog::addControl( CGUIControl *newControl,
+std::shared_ptr<GsControl> CGUIDialog::addControl( GsControl *newControl,
                                                      const GsRect<float>& RelRect )
 {
-    std::unique_ptr<CGUIControl> ctrl(newControl);
+    std::unique_ptr<GsControl> ctrl(newControl);
     return addControl( ctrl, RelRect );
 }
 
-std::shared_ptr<CGUIControl> CGUIDialog::addControl( CGUIControl *newControl )
+std::shared_ptr<GsControl> CGUIDialog::addControl( GsControl *newControl )
 {
-    std::unique_ptr<CGUIControl> ctrl(newControl);
+    std::unique_ptr<GsControl> ctrl(newControl);
     return addControl(ctrl);
 }
 
@@ -336,7 +336,7 @@ void CGUIDialog::processLogic()
     CGUIInputText *pInputCtrl = nullptr;
     for( auto &it : mControlList )
     {
-        CGUIControl *ctrl = it.get();
+        GsControl *ctrl = it.get();
         pInputCtrl = dynamic_cast<CGUIInputText*>(ctrl);
         if(pInputCtrl)
         {
@@ -357,7 +357,7 @@ void CGUIDialog::processLogic()
         int sel = 0;
         for( auto &it : mControlList )
         {
-            CGUIControl *ctrl = it.get();
+            GsControl *ctrl = it.get();
 
             ctrl->processLogic();
 

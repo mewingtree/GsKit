@@ -13,7 +13,7 @@
 
 //#include "engine/CEvent.h"
 
-class CGUIInputText : public CGUIControl
+class CGUIInputText : public GsControl
 {
 public:
 

@@ -3,7 +3,7 @@
 
 #include "GsControl.h"
 
-class GsProgressBar : public CGUIControl
+class GsProgressBar : public GsControl
 {
 public:
 

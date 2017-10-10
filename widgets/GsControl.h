@@ -14,7 +14,7 @@
 #include <base/utils/Geometry.h>
 
 
-class CGUIControl
+class GsControl
 {
 public:
 	enum Style
@@ -27,8 +27,8 @@ public:
 	};
 
 
-	CGUIControl();
-	virtual ~CGUIControl() {}
+    GsControl();
+    virtual ~GsControl() {}
 
 	virtual void processLogic() = 0;
 

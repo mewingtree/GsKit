@@ -17,9 +17,9 @@
 
 const int BLEND_SPEED = 16;
 
-int CGUIControl::mTwirliconID;
+int GsControl::mTwirliconID;
 
-CGUIControl::CGUIControl() :
+GsControl::GsControl() :
 mEnabled(true),
 mFontID(0),
 mHovered(false),
@@ -33,7 +33,7 @@ mSelected(false)
 }
 
 
-void CGUIControl::processBlendEffects()
+void GsControl::processBlendEffects()
 {
     if(mEnabled)
     {
@@ -62,7 +62,7 @@ void CGUIControl::processBlendEffects()
     }
 }
 
-void CGUIControl::processPointingState(const GsRect<float> &rect)
+void GsControl::processPointingState(const GsRect<float> &rect)
 {
     GsPointingState &pointingState = gPointDevice.mPointingState;
 
@@ -93,7 +93,7 @@ void CGUIControl::processPointingState(const GsRect<float> &rect)
 }
 
 
-void CGUIControl::drawTwirl( const SDL_Rect& lRect )
+void GsControl::drawTwirl( const SDL_Rect& lRect )
 {
     GsWeakSurface blit(gVideoDriver.getBlitSurface());
 
@@ -127,7 +127,7 @@ void CGUIControl::drawTwirl( const SDL_Rect& lRect )
 
 
 
-void CGUIControl::drawBlinker( const SDL_Rect& lRect )
+void GsControl::drawBlinker( const SDL_Rect& lRect )
 {
 	SDL_Surface *blitsfc = gVideoDriver.getBlitSurface();
 
