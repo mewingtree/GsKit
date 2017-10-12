@@ -13,6 +13,7 @@ static inline int BlitSurface(SDL_Surface *src, SDL_Rect *srcrect,
                        SDL_Surface *dst, SDL_Rect *dstrect)
 {
     assert(src);    assert(dst);
+
     return SDL_BlitSurface(src, srcrect, dst, dstrect);
 }
 
@@ -23,7 +24,8 @@ class GsWeakSurface
 {
 public:
 
-    GsWeakSurface() {}
+    GsWeakSurface() :
+            mpSurface(nullptr) {}
 
     GsWeakSurface(SDL_Surface *sfc) :
         mpSurface(sfc) {}
@@ -131,6 +133,7 @@ public:
                    dst->clip_rect,
                    NONE);
     }
+
     // TODO: We still need a blit scaled operation here!
 
 

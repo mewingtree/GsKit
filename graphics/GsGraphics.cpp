@@ -28,14 +28,14 @@ void GsGraphics::createEmptySprites(const int numVar, const int num_sprites)
 
     spriteVec.assign(num_sprites, sprite);
 
-    Sprite.assign(numVar, spriteVec);
+    mSprite.assign(numVar, spriteVec);
 }
 
 void GsGraphics::dumpSprites()
 {
-    for(size_t i = 0; i < Sprite[0].size(); i++)
+    for(size_t i = 0; i < mSprite[0].size(); i++)
 	{
-        GsSprite &thisSprite = Sprite[0][i];
+        GsSprite &thisSprite = mSprite[0][i];
 
 		// Temporary for testing!!
 		std::string fname = "sprite";
@@ -43,6 +43,18 @@ void GsGraphics::dumpSprites()
 		fname += ".bmp";
 		SDL_SaveBMP(thisSprite.getSDLSurface(), fname.c_str());
 	}
+}
+
+void GsGraphics::optimizeSprites()
+{
+    for(auto &spriteVec : mSprite)
+    {
+        for(auto &sprite : spriteVec)
+        {
+            sprite.optimizeSurface();
+        }
+    }
+
 }
 
 void GsGraphics::createEmptyBitmaps(Uint16 num_bmps)
@@ -132,8 +144,8 @@ void GsGraphics::freeBitmaps(std::vector<GsBitmap> &Bitmap)
 
 void GsGraphics::freeSprites()
 {
-    if( !Sprite.empty() )
-        Sprite.clear();
+    if( !mSprite.empty() )
+        mSprite.clear();
 }
 
 void GsGraphics::copyTileToSprite( const int var, Uint16 t, Uint16 s, Uint16 ntilestocopy )
@@ -143,8 +155,8 @@ void GsGraphics::copyTileToSprite( const int var, Uint16 t, Uint16 s, Uint16 nti
 	src_rect.w = src_rect.h = 16;
 	dst_rect.w = dst_rect.h = 16;
 
-    Sprite[var][s].setSize( 16, 16*ntilestocopy );
-    Sprite[var][s].createSurface( Tilemap.at(1).getSDLSurface()->flags, Palette.m_Palette );
+    mSprite[var][s].setSize( 16, 16*ntilestocopy );
+    mSprite[var][s].createSurface( Tilemap.at(1).getSDLSurface()->flags, Palette.m_Palette );
 	
 	for(Uint8 i=0 ; i<ntilestocopy ; i++)
 	{
@@ -154,7 +166,7 @@ void GsGraphics::copyTileToSprite( const int var, Uint16 t, Uint16 s, Uint16 nti
 		dst_rect.x = 0;
 		dst_rect.y = 16*i;
 
-        BlitSurface( Tilemap.at(1).getSDLSurface(), &src_rect, Sprite[var][s].getSDLSurface(), &dst_rect);
+        BlitSurface( Tilemap.at(1).getSDLSurface(), &src_rect, mSprite[var][s].getSDLSurface(), &dst_rect);
 	}
 }
 
@@ -222,12 +234,12 @@ GsBitmap *GsGraphics::getBitmapFromStr(const std::string &name) const
 GsSprite *GsGraphics::getSprite(const int var, const std::string &name) const
 {
 	std::string s_name;
-    for(unsigned int i=0 ; i<Sprite[var].size() ; i++)
+    for(unsigned int i=0 ; i<mSprite[var].size() ; i++)
 	{
-        s_name = Sprite[var][i].getName();
+        s_name = mSprite[var][i].getName();
 
 		if(s_name == name)
-            return const_cast<GsSprite*>(&(Sprite[var][i]));
+            return const_cast<GsSprite*>(&(mSprite[var][i]));
 	}
 
 	return NULL;

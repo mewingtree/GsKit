@@ -13,8 +13,7 @@
 //#include "sdl/extensions.h"
 #include "graphics/GsGraphics.h"
 
-GsSprite::GsSprite() :
-m_alpha(255)
+GsSprite::GsSprite()
 {
 	m_xsize = m_ysize = 0;
     m_bboxX1 = m_bboxY1 = 0;
@@ -120,7 +119,8 @@ bool GsSprite::optimizeSurface()
 {
     if(mpSurface)
     {
-        mpSurface.reset(gVideoDriver.convertThroughBlitSfc(mpSurface.get()), &SDL_FreeSurface);
+        mpSurface.reset(gVideoDriver.convertThroughBlitSfc(mpSurface.get()),
+                        &SDL_FreeSurface);
         return true;
     }
 
@@ -218,7 +218,7 @@ bool GsSprite::loadHQSprite( const std::string& filename )
 
 /**
  * \brief Reads the mask of a created modkeen style bitmap und converts that mask to 8-bit
- * 		  so it can be applied to the others. This is for HQ Sprites, the other have in internal algorithm
+ * 		  so it can be applied to the others. This is for HQ Sprites, the other ones have an internal algorithm
  */
 void GsSprite::readMask(SDL_Surface *displaysurface)
 {
@@ -303,8 +303,13 @@ void GsSprite::applyTransparency()
 			SDL_GetRGBA( colour, mpSurface->format, &r, &g, &b, &a );
 
 			if(*maskpx<16)
+            {
 				a = (255*(*maskpx))/15;
-			else a = 255;
+            }
+            else
+            {
+                a = 255;
+            }
 
 			colour = SDL_MapRGBA( mpSurface->format, r, g, b, a );
 
@@ -520,14 +525,19 @@ void GsSprite::drawSprite(const int x, const int y, const int w, const int h, co
 
 void GsSprite::drawSprite( SDL_Surface *dst, const int x, const int y, const int w, const int h )
 {
+/*    mpSurface.reset(gVideoDriver.convertThroughBlitSfc(mpSurface.get()),
+                    &SDL_FreeSurface);
+*/
 	SDL_Rect dst_rect, src_rect;
 	dst_rect.x = x;			dst_rect.y = y;
 	dst_rect.w = m_xsize;	dst_rect.h = m_ysize;
 
 	src_rect.x = 0;	src_rect.y = 0;
+
+    const auto &gameRes = gVideoDriver.getGameResolution();
 	
-	const int max_width = gVideoDriver.getGameResolution().w;
-	const int max_height = gVideoDriver.getGameResolution().h;
+    const int max_width  = gameRes.w;
+    const int max_height = gameRes.h;
 
 	if( m_xsize + x > max_width )
 		dst_rect.w = max_width - x;
@@ -552,7 +562,7 @@ void GsSprite::drawSprite( SDL_Surface *dst, const int x, const int y, const int
     src_rect.w = dst_rect.w = w;
     src_rect.h = dst_rect.h = h;
 
-	SDL_Surface *src = mpSurface.get();
+    SDL_Surface *src = mpSurface.get();
 
 	BlitSurface( src, &src_rect, dst, &dst_rect );
 }
@@ -584,12 +594,8 @@ void GsSprite::_drawBlinkingSprite( SDL_Surface *dst, Uint16 x, Uint16 y )
 	src_rect.w = dst_rect.w;
 	src_rect.h = dst_rect.h;
 
-//#if SDL_VERSION_ATLEAST(2, 0, 0)
-    
-//#else
     SDL_Surface *blanksfc = gVideoDriver.convertThroughBlitSfc(mpSurface.get());
 	blitMaskedSprite(blanksfc, mpSurface.get(), 0xFFFFFF);
 	BlitSurface( blanksfc, &src_rect, dst, &dst_rect );
 	SDL_FreeSurface(blanksfc);
-//#endif
 }

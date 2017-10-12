@@ -33,8 +33,8 @@ class GsGraphics : public GsSingleton<GsGraphics>
 public:
 	virtual ~GsGraphics();
 	
+    void dumpSprites();
     void createEmptySprites(const int numVar, const int num_sprites);
-	void dumpSprites();
 	void createEmptyBitmaps(Uint16 num_bmps);
     void createEmptyMaskedBitmaps(Uint16 num_bmps);
     void createEmptyMisGsBitmaps(Uint16 num_bmps);
@@ -48,7 +48,7 @@ public:
     void copyTileToSprite( const int var, Uint16 t, Uint16 s, Uint16 ntilestocopy );
 	
 	void drawDialogBox(SDL_Surface *DialogSurface, int x1, int y1, int w, int h, Uint32 colour = 0xFFFFFF);
-    int getNumSprites(const int var) { return Sprite[var].size(); }
+    int getNumSprites(const int var) { return mSprite[var].size(); }
 
     GsTilemap &getTileMap(size_t tilemap) { return Tilemap.at(tilemap); }
     std::vector<GsTilemap> &getTileMaps() { return Tilemap; }
@@ -59,8 +59,11 @@ public:
 
     GsSprite *getSprite(const int var, const std::string &name) const;
 	
-    GsSprite &getSprite(const int var, const int slot) { return Sprite[var][slot]; }
-    std::vector<GsSprite> &getSpriteVec(const int var) { return Sprite[var]; }
+    GsSprite &getSprite(const int var, const int slot) { return mSprite[var][slot]; }
+    std::vector<GsSprite> &getSpriteVec(const int var) { return mSprite[var]; }
+
+    void optimizeSprites();
+
 	GsFont &getFont(Uint8 index) { return Font.at(index); }
 	
     GsPalette Palette;
@@ -79,7 +82,7 @@ private:
     std::vector<GsBitmap> Bitmap;
     std::vector<GsBitmap> maskedBitmap;
     std::vector<GsBitmap> miscGsBitmap;
-    std::vector< std::vector<GsSprite> > Sprite;
+    std::vector< std::vector<GsSprite> > mSprite;
 
 };
 

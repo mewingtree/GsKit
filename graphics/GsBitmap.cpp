@@ -148,7 +148,7 @@ void GsBitmap::exchangeColor( const Uint8 oldR, const Uint8 oldG, const Uint8 ol
 void GsBitmap::setPerSurfaceAlpha(const Uint8 alpha)
 {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-    SDL_SetSurfaceAlphaMod( getSDLSurface(), 128);
+    SDL_SetSurfaceAlphaMod( getSDLSurface(), 128 );
 #else
 
     SDL_SetAlpha(getSDLSurface(), SDL_SRCALPHA, 128);

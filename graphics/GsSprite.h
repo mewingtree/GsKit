@@ -100,7 +100,7 @@ private:
 	std::string mName;
 	Uint8 m_xsize, m_ysize;
 	Sint16 m_xoffset, m_yoffset;
-	Uint8 m_alpha;
+    Uint8 m_alpha = 255;
 };
 
 #endif /* GsSprite_H_ */
