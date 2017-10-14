@@ -772,10 +772,12 @@ void CInput::pollEvents()
 
 			break;
 
+#if SDL_VERSION_ATLEAST(2, 0, 0)
         case SDL_MOUSEWHEEL:
             gEventManager.add( new MouseWheelEvent( Vector2D<float>(float(Event.wheel.x),
                                                                     float(Event.wheel.y)) ) );
             break;
+#endif
 
 		case SDL_MOUSEMOTION:
             transMouseRelCoord(Pos, Event.motion, activeArea);
