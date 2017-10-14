@@ -121,10 +121,22 @@ bool GsSprite::optimizeSurface()
     {
         mpSurface.reset(gVideoDriver.convertThroughBlitSfc(mpSurface.get()),
                         &SDL_FreeSurface);
+
         return true;
     }
 
     return false;
+}
+
+void GsSprite::optimizeSurfaceOnDemand()
+{
+    //auto *blitSfc = gVideoDriver.getBlitSurface();
+
+   // if(mpSurface->format->format != blitSfc->format->format)
+    /*{
+        mpSurface.reset(gVideoDriver.convertThroughBlitSfc(mpSurface.get()),
+                        &SDL_FreeSurface);
+    }*/
 }
 
 
@@ -528,6 +540,8 @@ void GsSprite::drawSprite( SDL_Surface *dst, const int x, const int y, const int
 /*    mpSurface.reset(gVideoDriver.convertThroughBlitSfc(mpSurface.get()),
                     &SDL_FreeSurface);
 */
+    optimizeSurfaceOnDemand();
+
 	SDL_Rect dst_rect, src_rect;
 	dst_rect.x = x;			dst_rect.y = y;
 	dst_rect.w = m_xsize;	dst_rect.h = m_ysize;

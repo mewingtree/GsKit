@@ -455,8 +455,16 @@ int CVideoDriver::getOptimalScaling()
 SDL_Surface *CVideoDriver::convertThroughBlitSfc( SDL_Surface *sfc )
 {
     SDL_Surface *blit = mpVideoEngine->getBlitSurface();
-    SDL_Surface *newSfc = SDL_ConvertSurface(sfc, blit->format, 0 );
-    return newSfc;
+
+    // Not sure why yet,
+    // but we need to call this twice in order to have correct masks for blits
+
+    SDL_Surface *newSfc  = SDL_ConvertSurface(sfc, blit->format, 0 );
+    SDL_Surface *newSfc2 = SDL_ConvertSurface(newSfc, blit->format, 0 );
+
+    SDL_FreeSurface(newSfc);
+
+    return newSfc2;
 }
 
 

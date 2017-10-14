@@ -109,7 +109,11 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 
 
-find_package(SDL2 REQUIRED)
+if(USE_SDL2)
+    find_package(SDL2 REQUIRED)
+endif()
+
+
 #find_package(SDL2_image REQUIRED)
 
 if(SDL2_FOUND)

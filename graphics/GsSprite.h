@@ -26,7 +26,18 @@ public:
     void copy(const GsSprite& original);
 
 	bool createSurface(Uint32 flags, SDL_Color *Palette);
+
+    /**
+     * @brief optimizeSurface
+     * @return
+     */
 	bool optimizeSurface();
+
+    /**
+     * @brief optimizeSurfaceOnDemand
+     */
+    void optimizeSurfaceOnDemand();
+
 	void readMask(SDL_Surface *displaysurface);
 	void readBBox(SDL_Surface *displaysurface);
 	void applyTransparency();

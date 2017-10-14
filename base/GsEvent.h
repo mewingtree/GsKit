@@ -66,7 +66,9 @@ public:
         // Make a copy of that list, because the original
         // could change, while pumping happens
         for(auto &ev : m_EventList)
+        {
             mPumpEventPtrs.push_back(ev);
+        }
 
         // We don't need anything from this list anymore
         m_EventList.clear();
