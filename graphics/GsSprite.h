@@ -33,10 +33,6 @@ public:
      */
 	bool optimizeSurface();
 
-    /**
-     * @brief optimizeSurfaceOnDemand
-     */
-    void optimizeSurfaceOnDemand();
 
 	void readMask(SDL_Surface *displaysurface);
 	void readBBox(SDL_Surface *displaysurface);
