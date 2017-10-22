@@ -172,10 +172,15 @@ void	InitSearchPaths(const std::string &cfgFname);
 // if searchpath!=NULL, it will place there the searchpath
 std::string GetFullFileName(const std::string& path, std::string* searchpath = nullptr);
 
-// this give always a dir like searchpath[0]/path, but it ensures:
-// - the filename is correct, if the file exists
-// - it replaces ${var} with ReplaceFileVariables
-// if create_nes_dirs is set, the nessecary dirs will be created
+/**
+ * @brief GetWriteFullFileName  this give always a dir like searchpath[0]/path, but it ensures:
+ *                              - the filename is correct, if the file exists
+ *                              - it replaces ${var} with ReplaceFileVariables
+ *                             if create_nes_dirs is set, the nessecary dirs will be created
+ * @param path
+ * @param create_nes_dirs      if true the nessecary dirs will be created
+ * @return "" if nothing was found or the full path
+ */
 std::string GetWriteFullFileName(const std::string& path, bool create_nes_dirs = false);
 
 // replacement for the simple fopen
