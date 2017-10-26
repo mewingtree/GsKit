@@ -123,7 +123,6 @@ public:
 	void setVidConfig(const CVidConfig& VidConf);
 	void setMode(int width, int height,int depth);
 	void setMode(const GsRect<Uint16>& res);
-	void setSpecialFXMode(bool SpecialFX);
     void setFilter(const filterOptionType value);
 	void setScaleType(bool IsNormal);
 	void setZoom(short vale);
@@ -155,8 +154,6 @@ public:
 	  mVidConfig.mAspectCorrection.w = w; 
 	  mVidConfig.mAspectCorrection.h = h; 
 	}
-
-	bool getSpecialFXConfig(void) { return mVidConfig.m_special_fx; }
 
     bool VGamePadEnabled() { return mVidConfig.mVPad;   }
 

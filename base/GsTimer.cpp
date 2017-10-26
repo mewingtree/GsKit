@@ -27,7 +27,7 @@ resetLogic(false)
 
 void CTimer::setFPS( const float fps )
 {
-    mRenderLatency = 1000.0f / static_cast<float>(fps);
+    mRenderLatency = (fps <= 0.0) ? 0.0 : (1000.0f / static_cast<float>(fps));
 }
 
 void CTimer::setLPS( const float lps )

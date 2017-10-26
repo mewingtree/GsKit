@@ -64,7 +64,6 @@ void CVidConfig::reset()
 	mAspectCorrection.w=4;
 	mAspectCorrection.h=3;
 	m_CameraBounds.reset();
-	m_special_fx = true;
 
     mGameRect.x = 0;
     mGameRect.y = 0;

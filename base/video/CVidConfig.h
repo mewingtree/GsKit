@@ -68,7 +68,6 @@ public:
     bool mOpengl;
     bool mVPad = false;
 	GsRect<int> mAspectCorrection;
-	bool m_special_fx;
 	bool vsync;
 
 	st_camera_bounds m_CameraBounds;

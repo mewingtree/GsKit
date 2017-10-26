@@ -186,27 +186,27 @@ void CVideoDriver::setVidConfig(const CVidConfig& VidConf) {
     setMode(mVidConfig.mDisplayRect);
 }
 
-void CVideoDriver::setSpecialFXMode(bool SpecialFX)
-{
-    mVidConfig.m_special_fx = SpecialFX;
-}
-
 void CVideoDriver::setMode(int width, int height, int depth) {
 	GsRect<Uint16> res(width, height);
 	setMode(res);
 }
 
-void CVideoDriver::setMode(const GsRect<Uint16>& res) {
+void CVideoDriver::setMode(const GsRect<Uint16>& res)
+{
     mVidConfig.setResolution(res);
 
-	// TODO: Cycle through the list until the matching resolution is matched. If it doesn't exist
+    // Cycle through the list until the matching resolution is matched. If it doesn't exist
 	// add it;
-	for (m_Resolution_pos = m_Resolutionlist.begin();
-			m_Resolution_pos != m_Resolutionlist.end(); m_Resolution_pos++)
+    for (m_Resolution_pos = m_Resolutionlist.begin();
+         m_Resolution_pos != m_Resolutionlist.end();
+         m_Resolution_pos++)
+    {
 		if (*m_Resolution_pos == res)
 			break;
+    }
 
-	if (m_Resolution_pos == m_Resolutionlist.end()) {
+    if (m_Resolution_pos == m_Resolutionlist.end())
+    {
 		m_Resolutionlist.push_back(res);
 		m_Resolution_pos--;
 	}

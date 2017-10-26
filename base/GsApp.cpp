@@ -278,7 +278,7 @@ void GsApp::runMainCycle()
         gVideoDriver.collectSurfaces();
 
         // Now you really render the screen
-        // When enabled, it also will apply Filters
+        // When enabled, it also applies Filters
         gVideoDriver.updateDisplay();
 
 
@@ -288,7 +288,15 @@ void GsApp::runMainCycle()
         if( mustShutdown() )
             break;
 
-        const auto fWaitTime = renderLatency - elapsed;
+        // If renderLatency is zero or less, delays won't happens.
+        // This means the system renders as much as possible
+        // with violating the the LPS
+        auto fWaitTime = -elapsed;
+
+        if(renderLatency > 0.0)
+        {
+            fWaitTime = renderLatency+fWaitTime;
+        }
 
         // wait time remaining in current loop
         if( fWaitTime > 0.0 )
