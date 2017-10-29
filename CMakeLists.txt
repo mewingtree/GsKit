@@ -107,16 +107,14 @@ file(GLOB_RECURSE ALL_SRCS_GSKIT_BASE *.c* *.h*)
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 
-
-
 if(USE_SDL2)
     find_package(SDL2 REQUIRED)
 endif()
 
-
-#find_package(SDL2_image REQUIRED)
-
 if(SDL2_FOUND)
+
+   find_package(SDL2_image REQUIRED)
+
    message(STATUS "Using shared SDL Version 2 for Commander Genius")
    include_directories(${SDL2_INCLUDE_DIRS})
    include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
@@ -136,3 +134,5 @@ add_library(GsKit ${ALL_SRCS_GSKIT_BASE})
 
 Target_link_libraries(GsKit ${SDL2_LIBRARIES})
 Target_link_libraries(GsKit ${SDL2IMAGE_LIBRARIES})
+
+cotire(GsKit)
