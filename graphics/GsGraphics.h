@@ -34,12 +34,15 @@ public:
 	virtual ~GsGraphics();
 	
     void dumpSprites();
-    void createEmptySprites(const int numVar, const int num_sprites);
+
+    void createEmptySprites(const size_t numVar,
+                            const size_t num_sprites);
+
 	void createEmptyBitmaps(Uint16 num_bmps);
     void createEmptyMaskedBitmaps(Uint16 num_bmps);
     void createEmptyMisGsBitmaps(Uint16 num_bmps);
     void createEmptyFontmaps(Uint8 num_fonts);
-	void createEmptyTilemaps(size_t num);
+    void createEmptyTilemaps(const size_t num);
 	void createEmptyCursorMap(SDL_Surface *surface);
 	
 	void drawDigits(const std::string& text, Uint16 x, Uint16 y, SDL_Surface *blitsurface);

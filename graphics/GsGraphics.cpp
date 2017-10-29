@@ -13,20 +13,21 @@
 ///
 // Creation Routines
 ///
-void GsGraphics::createEmptyTilemaps(size_t num)
+void GsGraphics::createEmptyTilemaps(const size_t num)
 {
 	freeTilemap();
     Tilemap.resize(num);
 }
 
-void GsGraphics::createEmptySprites(const int numVar, const int num_sprites)
+void GsGraphics::createEmptySprites(const size_t numVar,
+                                    const size_t numSprites)
 {
 	freeSprites();
     GsSprite sprite;
 
     std::vector<GsSprite> spriteVec;
 
-    spriteVec.assign(num_sprites, sprite);
+    spriteVec.assign(numSprites, sprite);
 
     mSprite.assign(numVar, spriteVec);
 }

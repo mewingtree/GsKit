@@ -376,7 +376,7 @@ bool CaseInsFindFile(const std::string& dir, const std::string& searchname, std:
 
 // does case insensitive search for file
 bool GetExactFileName(const std::string& abs_searchname, std::string& filename) {
-	const char* seps[] = {"\\", "/", (char*)NULL};
+    const char* seps[] = {"\\", "/", (char*)nullptr};
 	if(abs_searchname.size() == 0) {
 		filename = "";
 		return false;

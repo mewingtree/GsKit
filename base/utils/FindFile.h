@@ -17,8 +17,8 @@
 
 // TODO: rename this file
 
-#ifndef __FINDFILE_H__
-#define __FINDFILE_H__
+#ifndef FINDFILE_H
+#define FINDFILE_H
 
 #include <iomanip>
 #include <string>
@@ -515,4 +515,4 @@ inline bool StatFile( const std::string & file, struct stat * st )
 	return true;
 }
 
-#endif  //  __FINDFILE_H__
+#endif  //  FINDFILE_H
