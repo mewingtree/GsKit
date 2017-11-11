@@ -703,27 +703,6 @@ bool OpenGameFileR(std::ifstream& f, const std::string& path, std::ios_base::ope
 	return false;
 }
 
-std::ofstream && OpenGameFileW(const std::string& path, const std::ios_base::openmode mode)
-{
-    std::ofstream f;
-
-    if(path.size() == 0)
-        return std::move(f);
-
-    std::string fullfn = GetWriteFullFileName(path, true);
-    if(fullfn.size() != 0)
-    {
-        try
-        {
-            f.open(Utf8ToSystemNative(fullfn).c_str(), mode);
-            return std::move(f);
-        }
-        catch(...) {}
-    }
-
-    return std::move(f);
-}
-
 
 bool OpenGameFileW(std::ofstream& f, const std::string& path, std::ios_base::openmode mode)
 {
